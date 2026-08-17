@@ -9,7 +9,7 @@ const BOT_REPLIES = [
   "✨ Our **Marble Print Midi Dress** just arrived — KES 1,500 and absolutely stunning for any occasion!",
   "💙 The **Abstract Kaftan Tops** are flying! KES 1,500 each, available in orange/red and blue/white. Very popular!",
   "👗 All clothing at Styled.ke is **KES 1,500** — dresses, tops, everything! Want me to help you find your size?",
-  "💛 For perfumes, our **Chanel No.5 EDP** is on sale — KES 8,500 (was 12,000). Authentic EX-USA! Shall I help you order?",
+  "🚚 We deliver nationwide, free of charge! Just add to your cart and check out on the site.",
 ];
 
 interface Msg {

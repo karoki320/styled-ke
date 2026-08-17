@@ -3,8 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCartStore } from "@/store/cart";
-import { fmtKES, waLink } from "@/lib/utils";
-import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
+import { fmtKES } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
 export function CartDrawer() {
@@ -124,18 +123,6 @@ export function CartDrawer() {
             >
               CHECKOUT →
             </Link>
-            <a
-              href={waLink(
-                `Hello Styled.ke! 👋 I'd like to order:\n\n${items
-                  .map((i) => `🛍 ${i.name} x${i.qty} — ${fmtKES(i.price * i.qty)}`)
-                  .join("\n")}\n\n💰 *Total: ${fmtKES(sub)}*\n\nPlease confirm! ✨`
-              )}
-              target="_blank"
-              rel="noreferrer"
-              className="btn-wa block w-full justify-center px-4 py-2.5 text-[0.69rem]"
-            >
-              <WhatsAppIcon size={12} /> ORDER VIA WHATSAPP
-            </a>
           </div>
         )}
       </div>

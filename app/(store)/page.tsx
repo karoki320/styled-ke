@@ -1,6 +1,5 @@
 import { Hero } from "@/components/store/Hero";
 import { TrustBar } from "@/components/store/TrustBar";
-import { Categories } from "@/components/store/Categories";
 import { FreshArrivals } from "@/components/store/FreshArrivals";
 import { BrandStory } from "@/components/store/BrandStory";
 import { Testimonials } from "@/components/store/Testimonials";
@@ -11,7 +10,6 @@ export default function HomePage() {
     <>
       <Hero />
       <TrustBar />
-      <Categories />
       <FreshArrivals />
       <BrandStory />
       <Testimonials />

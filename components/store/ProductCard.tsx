@@ -4,10 +4,9 @@ import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import type { Product } from "@/types";
-import { fmtKES, waLink } from "@/lib/utils";
+import { fmtKES } from "@/lib/utils";
 import { useCartStore } from "@/store/cart";
 import { useToastStore } from "@/store/toast";
-import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
 
 export function ProductCard({ product }: { product: Product }) {
   const router = useRouter();
@@ -73,7 +72,7 @@ export function ProductCard({ product }: { product: Product }) {
             {wish ? "♥" : "♡"}
           </button>
           {product.colors && product.colors.length > 1 && (
-            <div className="absolute bottom-[54px] left-2 z-[1] flex gap-0.5">
+            <div className="absolute bottom-2.5 left-2 z-[1] flex gap-0.5">
               {product.colors.map((c) => (
                 <div
                   key={c}
@@ -84,32 +83,22 @@ export function ProductCard({ product }: { product: Product }) {
               ))}
             </div>
           )}
-          <div className="absolute inset-x-0 bottom-0 flex translate-y-0 flex-col gap-1.5 bg-gradient-to-t from-black/[0.15] to-transparent p-2 opacity-100 transition-all duration-300 lg:translate-y-2 lg:from-transparent lg:opacity-0 lg:group-hover:translate-y-0 lg:group-hover:opacity-100">
-            <button
-              onClick={handleAdd}
-              className="btn-blk w-full justify-center px-2.5 py-2.5 text-[0.62rem]"
-            >
-              ADD TO CART
-            </button>
-            <a
-              href={waLink(
-                `Hello Styled.ke! I'd like to order:\n🛍 *${product.name}*\n💰 ${fmtKES(product.price)} ✨`
-              )}
-              target="_blank"
-              rel="noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="btn-wa w-full justify-center px-2.5 py-[9px] text-[0.59rem]"
-            >
-              <WhatsAppIcon size={11} /> ORDER VIA WHATSAPP
-            </a>
-          </div>
         </div>
         <div className="px-0.5 py-2.5">
           <div className="mb-1 text-[0.57rem] font-semibold uppercase tracking-wide text-gray-400">
             {product.category}
           </div>
-          <div className="mb-1.5 text-[0.86rem] font-medium leading-tight text-black">
-            {product.name}
+          <div className="mb-1.5 flex items-start justify-between gap-2.5">
+            <div className="text-[0.86rem] font-medium leading-tight text-black">
+              {product.name}
+            </div>
+            <button
+              onClick={handleAdd}
+              aria-label="Add to cart"
+              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-black text-[1.1rem] leading-none text-white transition-all hover:scale-110 hover:bg-gold"
+            >
+              +
+            </button>
           </div>
           <div className="flex items-center gap-2">
             {product.compare_price ? (

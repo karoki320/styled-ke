@@ -9,8 +9,6 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
     links: [
       { label: "All Products", href: "/shop" },
       { label: "Clothing — KES 1,500", href: "/shop/clothing" },
-      { label: "Perfumes", href: "/shop/perfumes" },
-      { label: "Bath & Body", href: "/shop/bath-body" },
       { label: "New Arrivals", href: "/shop" },
       { label: "Sale", href: "/shop/sale" },
     ],
@@ -57,8 +55,8 @@ export function Footer() {
               </div>
             </div>
             <p className="mb-3.5 max-w-[210px] text-[0.78rem] leading-loose text-white/[0.42]">
-              Nairobi&apos;s premium boutique. All clothing KES 1,500. Authentic
-              fashion &amp; fragrances.
+              Nairobi&apos;s premium boutique. All clothing KES 1,500. Authentic,
+              quality-checked fashion.
             </p>
             <a
               href={waLink("Hello Styled.ke! ✨")}

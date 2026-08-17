@@ -4,8 +4,6 @@ import { ShopGrid, type ShopFilter } from "@/components/store/ShopGrid";
 
 const SLUG_MAP: Record<string, ShopFilter> = {
   clothing: "Clothing",
-  perfumes: "Perfumes",
-  "bath-body": "Bath & Body",
   sale: "Sale",
 };
 

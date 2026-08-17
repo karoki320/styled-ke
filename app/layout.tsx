@@ -20,7 +20,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Styled.ke – Your Style, Elevated.",
   description:
-    "Nairobi's premium boutique for fashion & fragrances. All clothing KES 1,500. Authentic EX-USA perfumes, Victoria's Secret, and exclusive fashion — free nationwide delivery.",
+    "Nairobi's premium boutique for fashion. All clothing KES 1,500. Authentic, exclusive fashion — free nationwide delivery.",
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_APP_URL || "https://styled.ke"
   ),

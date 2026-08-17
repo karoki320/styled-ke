@@ -14,11 +14,7 @@ const MONTHLY = [
 ];
 const maxV = Math.max(...MONTHLY.map((d) => d.v));
 
-const CATEGORY_SPLIT = [
-  { cat: "Clothing", pct: 65 },
-  { cat: "Perfumes", pct: 25 },
-  { cat: "Bath & Body", pct: 10 },
-];
+const CATEGORY_SPLIT = [{ cat: "Clothing", pct: 100 }];
 
 export default function AdminDashboardPage() {
   const lowStock = PRODUCTS.filter((p) => p.stock_quantity <= p.low_stock_threshold);

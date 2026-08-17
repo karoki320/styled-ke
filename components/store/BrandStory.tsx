@@ -51,10 +51,9 @@ export function BrandStory() {
             <em className="italic text-gold">To Your Door</em>
           </h2>
           <p className="mb-5.5 text-[0.88rem] leading-loose text-[#666]">
-            Styled.ke is Nairobi&apos;s home for accessible luxury. We stock
-            authentic EX-USA perfumes, Victoria&apos;s Secret collections, and
-            our own exclusive fashion line — all clothing KES 1,500.
-            Hand-picked for quality, style, and value.
+            Styled.ke is Nairobi&apos;s home for accessible, elevated fashion —
+            our own exclusive clothing line, all KES 1,500. Hand-picked for
+            quality, style, and value.
           </p>
           {FEATURES.map((f) => (
             <div

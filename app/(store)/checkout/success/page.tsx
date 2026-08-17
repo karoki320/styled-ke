@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { fmtKES, waLink } from "@/lib/utils";
-import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
+import { fmtKES } from "@/lib/utils";
 
 const STEPS = [
   ["📦", "Order Placed", "Right now"],
@@ -46,17 +45,7 @@ export default function CheckoutSuccessPage({
           </div>
         ))}
         <div className="mt-5 flex flex-col gap-2">
-          <a
-            href={waLink(
-              `Hi Styled.ke! 👋 I placed order ${order} for ${fmtKES(total)}. Please confirm delivery ✨`
-            )}
-            target="_blank"
-            rel="noreferrer"
-            className="btn-wa w-full justify-center py-3.5 text-[0.73rem]"
-          >
-            <WhatsAppIcon size={15} /> CONFIRM ON WHATSAPP
-          </a>
-          <Link href="/shop" className="btn-blk w-full justify-center py-2.5 text-[0.7rem]">
+          <Link href="/shop" className="btn-blk w-full justify-center py-3.5 text-[0.7rem]">
             CONTINUE SHOPPING →
           </Link>
         </div>

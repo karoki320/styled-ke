@@ -61,7 +61,7 @@ export function BroadcastPanel() {
         <div className="space-y-3">
           {[
             { title: "New Arrivals Drop", sent: 412, delivered: 398, read: 301, date: "2 days ago" },
-            { title: "Weekend Sale — 20% Off Perfumes", sent: 356, delivered: 340, read: 289, date: "1 week ago" },
+            { title: "Weekend Sale — 20% Off Dresses", sent: 356, delivered: 340, read: 289, date: "1 week ago" },
           ].map((b) => (
             <div key={b.title} className="border border-[#f0f0f0] p-3.5">
               <div className="mb-2 flex items-center justify-between">

@@ -15,29 +15,14 @@ const MENUS: Record<string, { label: string; href: string }[]> = {
     { label: "Midi Dresses", href: "/shop/clothing" },
     { label: "New Arrivals", href: "/shop/clothing" },
   ],
-  Perfumes: [
-    { label: "All Perfumes", href: "/shop/perfumes" },
-    { label: "EX-USA Fragrances", href: "/shop/perfumes" },
-    { label: "Designer Scents", href: "/shop/perfumes" },
-    { label: "Gift Sets", href: "/shop/perfumes" },
-  ],
-  "Bath & Body": [
-    { label: "Victoria's Secret", href: "/shop/bath-body" },
-    { label: "Body Mists", href: "/shop/bath-body" },
-    { label: "Bath Bombs", href: "/shop/bath-body" },
-    { label: "Skincare", href: "/shop/bath-body" },
-  ],
   Sale: [
     { label: "All Sale", href: "/shop/sale" },
     { label: "Clothing Sale", href: "/shop/sale" },
-    { label: "Perfumes Sale", href: "/shop/sale" },
   ],
 };
 
 const CATEGORY_HREF: Record<string, string> = {
   Clothing: "/shop/clothing",
-  Perfumes: "/shop/perfumes",
-  "Bath & Body": "/shop/bath-body",
   Sale: "/shop/sale",
 };
 

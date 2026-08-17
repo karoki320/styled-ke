@@ -7,7 +7,7 @@ import { fmtKES } from "@/lib/utils";
 import { usePOSStore, type POSPaymentMethod } from "@/store/pos";
 import type { Product } from "@/types";
 
-const CATEGORY_TABS: ("All" | Product["category"])[] = ["All", "Clothing", "Perfumes", "Bath & Body"];
+const CATEGORY_TABS: ("All" | Product["category"])[] = ["All", "Clothing"];
 
 export default function POSPage() {
   const session = usePOSStore((s) => s.session);

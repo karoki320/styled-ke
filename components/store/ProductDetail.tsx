@@ -4,9 +4,8 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { Product } from "@/types";
-import { fmtKES, waLink } from "@/lib/utils";
+import { fmtKES } from "@/lib/utils";
 import { useCartStore } from "@/store/cart";
-import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
 import { ProductCard } from "./ProductCard";
 import { getRelatedProducts } from "@/lib/mock-data";
 
@@ -159,16 +158,6 @@ export function ProductDetail({ product }: { product: Product }) {
             >
               {added ? "✓ ADDED TO CART" : "ADD TO CART"}
             </button>
-            <a
-              href={waLink(
-                `Hello Styled.ke! 👋\n\nI'd like to order:\n🛍 *${product.name}*\n💰 ${fmtKES(product.price)}\nQty: ${qty}\n\nPlease confirm ✨`
-              )}
-              target="_blank"
-              rel="noreferrer"
-              className="btn-wa w-full justify-center px-4 py-3.5 text-[0.73rem]"
-            >
-              <WhatsAppIcon size={15} /> ORDER VIA WHATSAPP
-            </a>
           </div>
 
           <div className="mt-5 border-t border-border pt-4">

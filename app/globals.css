@@ -95,7 +95,8 @@ a {
 
   /* ─── Section labels ─────────────────────────────────── */
   .sec-label {
-    @apply block mb-1.5 text-[0.6rem] tracking-[0.25em] uppercase font-bold text-gray-400;
+    @apply block mb-1.5 text-[0.6rem] tracking-[0.25em] uppercase font-bold;
+    color: #5c5c5c;
   }
   .sec-title {
     @apply pf font-bold text-black leading-tight;
@@ -118,7 +119,8 @@ a {
     box-shadow: 0 4px 18px rgba(0, 0, 0, 0.07);
   }
   .anav {
-    @apply flex items-center gap-2.5 w-full text-left bg-none border-none cursor-pointer text-[0.69rem] tracking-wide uppercase font-semibold px-4.5 py-3 text-gray-400 transition-all;
+    @apply flex items-center gap-2.5 w-full text-left bg-none border-none cursor-pointer text-[0.69rem] tracking-wide uppercase font-semibold px-4.5 py-3 transition-all;
+    color: #5c5c5c;
   }
   .anav:hover {
     @apply bg-bg-light text-black;
@@ -157,4 +159,18 @@ a {
     padding-top: 0.85rem !important;
     padding-bottom: 0.85rem !important;
   }
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   Darker, more legible secondary text. The default Tailwind
+   gray-400/300 shades used for labels, sidebar nav, table headers
+   and captions (in both the storefront and the admin panel) are too
+   light on a white background. Overriding the utility classes here
+   fixes every instance app-wide without editing each call site.
+   ───────────────────────────────────────────────────────────────── */
+.text-gray-400 {
+  color: #5c5c5c !important;
+}
+.text-gray-300 {
+  color: #9a9a9a !important;
 }

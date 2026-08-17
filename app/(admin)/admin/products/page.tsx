@@ -6,7 +6,7 @@ import { PRODUCTS as INITIAL_PRODUCTS } from "@/lib/mock-data";
 import { fmtKES, slugify } from "@/lib/utils";
 import type { Product } from "@/types";
 
-const CATEGORIES: Product["category"][] = ["Clothing", "Perfumes", "Bath & Body"];
+const CATEGORIES: Product["category"][] = ["Clothing"];
 
 const emptyDraft: Omit<Product, "id"> = {
   name: "",

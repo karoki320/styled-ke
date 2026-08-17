@@ -23,26 +23,6 @@ export const CATEGORIES: Category[] = [
     display_order: 1,
     is_active: true,
   },
-  {
-    id: "cat-perfumes",
-    name: "Perfumes",
-    slug: "perfumes",
-    description: "EX-USA fragrances",
-    image_url:
-      "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=600&h=800&fit=crop",
-    display_order: 2,
-    is_active: true,
-  },
-  {
-    id: "cat-bath-body",
-    name: "Bath & Body",
-    slug: "bath-body",
-    description: "Victoria's Secret & more",
-    image_url:
-      "https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=600&h=800&fit=crop",
-    display_order: 3,
-    is_active: true,
-  },
 ];
 
 export const PRODUCTS: Product[] = [
@@ -172,78 +152,6 @@ export const PRODUCTS: Product[] = [
     is_active: true,
     is_featured: true,
     sku: "SK-CL-007",
-  },
-  {
-    id: "8",
-    name: "Chanel No.5 EDP 100ml",
-    slug: "chanel-no5-edp-100ml",
-    price: 8500,
-    compare_price: 12000,
-    badge: "SALE",
-    category: "Perfumes",
-    stock_quantity: 14,
-    low_stock_threshold: 5,
-    image:
-      "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=600&h=700&fit=crop",
-    description:
-      "The iconic floral aldehyde fragrance. Sophisticated, timeless and utterly luxurious. Sourced directly from the USA.",
-    is_active: true,
-    is_featured: true,
-    sku: "SK-PF-001",
-  },
-  {
-    id: "9",
-    name: "Dior Sauvage EDT 60ml",
-    slug: "dior-sauvage-edt-60ml",
-    price: 6800,
-    compare_price: null,
-    badge: null,
-    category: "Perfumes",
-    stock_quantity: 9,
-    low_stock_threshold: 5,
-    image:
-      "https://images.unsplash.com/photo-1547887538-e3a2f32cb1cc?w=600&h=700&fit=crop",
-    description:
-      "Fresh, raw and noble. A scent of absolute freedom. EX-USA authentic.",
-    is_active: true,
-    is_featured: false,
-    sku: "SK-PF-002",
-  },
-  {
-    id: "10",
-    name: "VS Love Spell Body Mist",
-    slug: "vs-love-spell-body-mist",
-    price: 2200,
-    compare_price: null,
-    badge: null,
-    category: "Bath & Body",
-    stock_quantity: 31,
-    low_stock_threshold: 5,
-    image:
-      "https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=600&h=700&fit=crop",
-    description:
-      "Victoria's Secret Love Spell — cherry blossom and peach. Light, flirty and irresistible.",
-    is_active: true,
-    is_featured: false,
-    sku: "SK-BB-001",
-  },
-  {
-    id: "11",
-    name: "Luxury Bath Bomb Set (6pc)",
-    slug: "luxury-bath-bomb-set-6pc",
-    price: 1500,
-    compare_price: null,
-    badge: null,
-    category: "Bath & Body",
-    stock_quantity: 18,
-    low_stock_threshold: 5,
-    image:
-      "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=600&h=700&fit=crop",
-    description:
-      "6-piece artisan bath bomb set infused with essential oils. Transform your bath into a spa experience.",
-    is_active: true,
-    is_featured: false,
-    sku: "SK-BB-002",
   },
 ];
 
@@ -432,8 +340,8 @@ export const WHATSAPP_MESSAGES: Record<string, WhatsAppMessage[]> = {
 
 export const AUTOMATION_FLOWS: AutomationFlow[] = [
   { id: "af1", name: "Greeting", trigger_keyword: "hi, hello, hey", response_type: "button", response_content: "Hello! 👋 Welcome to Styled.ke. All clothing is KES 1,500! How can I help — Shop, Prices, Delivery, or Location?", is_active: true, trigger_count: 412 },
-  { id: "af2", name: "Catalogue", trigger_keyword: "catalogue, shop, products", response_type: "list", response_content: "Browse our full catalogue: styled.ke/shop — Clothing, Perfumes, Bath & Body.", is_active: true, trigger_count: 268 },
-  { id: "af3", name: "Price", trigger_keyword: "price, how much", response_type: "text", response_content: "All clothing at Styled.ke is KES 1,500! Perfumes from KES 2,200. Visit styled.ke for the full range.", is_active: true, trigger_count: 351 },
+  { id: "af2", name: "Catalogue", trigger_keyword: "catalogue, shop, products", response_type: "list", response_content: "Browse our full catalogue: styled.ke/shop — dresses, tops and more, all KES 1,500.", is_active: true, trigger_count: 268 },
+  { id: "af3", name: "Price", trigger_keyword: "price, how much", response_type: "text", response_content: "All clothing at Styled.ke is KES 1,500! Visit styled.ke for the full range.", is_active: true, trigger_count: 351 },
   { id: "af4", name: "Order", trigger_keyword: "order, buy, want", response_type: "text", response_content: "Great! Please send me your name, the item you'd like, and your delivery address and I'll get it sorted.", is_active: true, trigger_count: 190 },
   { id: "af5", name: "Delivery", trigger_keyword: "delivery, ship", response_type: "text", response_content: "We deliver nationwide via rider, matatu, mtaani pickup (KES 140) or doorstep pickup (from KES 350). Most orders arrive in 1-3 business days.", is_active: true, trigger_count: 144 },
   { id: "af6", name: "Location", trigger_keyword: "location, where", response_type: "text", response_content: "We're based in Nairobi, Kenya. Message us for the exact boutique address and directions!", is_active: true, trigger_count: 77 },

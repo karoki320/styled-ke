@@ -3,20 +3,17 @@ import { PRODUCTS } from "@/lib/mock-data";
 import { ProductCard } from "./ProductCard";
 import { cn } from "@/lib/utils";
 
-export type ShopFilter = "Shop All" | "Clothing" | "Perfumes" | "Bath & Body" | "Sale";
+export type ShopFilter = "Shop All" | "Clothing" | "Sale";
 
 const TABS: { label: ShopFilter; href: string }[] = [
   { label: "Shop All", href: "/shop" },
   { label: "Clothing", href: "/shop/clothing" },
-  { label: "Perfumes", href: "/shop/perfumes" },
-  { label: "Bath & Body", href: "/shop/bath-body" },
+  { label: "Sale", href: "/shop/sale" },
 ];
 
 const TITLES: Record<ShopFilter, string> = {
   "Shop All": "All Products",
   Clothing: "Shop Clothing",
-  Perfumes: "Shop Perfumes",
-  "Bath & Body": "Shop Bath & Body",
   Sale: "Sale",
 };
 
