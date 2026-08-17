@@ -109,7 +109,7 @@ export function NavBar() {
             href="/admin"
             className="bg-black px-3.5 py-1.5 text-[0.62rem] font-bold uppercase tracking-wide text-white transition-all hover:bg-gold"
           >
-            ⚙ Admin
+            Sign In
           </Link>
           <button
             onClick={openCart}
@@ -194,7 +194,7 @@ export function NavBar() {
             href="/admin"
             className="block border-t border-border bg-bg-light px-5 py-4 text-[0.85rem] font-bold uppercase tracking-wide text-gold"
           >
-            ⚙ Admin
+            Sign In
           </Link>
         </div>
       )}
