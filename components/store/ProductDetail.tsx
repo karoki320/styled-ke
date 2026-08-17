@@ -10,7 +10,7 @@ import { ProductCard } from "./ProductCard";
 import { getRelatedProducts } from "@/lib/mock-data";
 
 const PERKS = [
-  "🚚 Free delivery nationwide",
+  "🚚 Nationwide delivery — fee calculated at checkout",
   "✓ Authentic Styled.ke product",
   "📦 Premium packaging",
   "💬 WhatsApp: 0734 807 511",

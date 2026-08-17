@@ -6,7 +6,7 @@ import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
 const FEATURES = [
   "All clothing from KES 1,500 only",
   "Authentic & quality-checked products",
-  "Free nationwide delivery",
+  "Nationwide delivery — fee calculated at checkout",
   "Visit our physical boutique in Nairobi",
 ];
 

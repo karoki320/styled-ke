@@ -82,10 +82,10 @@ export default function CartPage() {
             </div>
             <div className="mb-3 flex justify-between text-sm">
               <span className="text-muted">Delivery</span>
-              <span className="font-semibold text-success">FREE ✓</span>
+              <span className="font-semibold text-gray-400">Calculated at checkout</span>
             </div>
             <div className="flex justify-between border-t border-border pt-3">
-              <span className="pf font-bold">Total</span>
+              <span className="pf font-bold">Subtotal</span>
               <span className="pf font-bold">{fmtKES(sub)}</span>
             </div>
           </div>

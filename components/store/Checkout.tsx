@@ -454,8 +454,8 @@ export function Checkout() {
             </div>
             <div className="mb-2.5 flex justify-between text-[0.8rem]">
               <span className="text-gray-400">Delivery</span>
-              <span className="font-semibold text-success">
-                {delOpt.fee > 0 ? fmtKES(delOpt.fee) : "FREE ✓"}
+              <span className="font-semibold">
+                {delOpt.fee > 0 ? fmtKES(delOpt.fee) : delOpt.feeLabel}
               </span>
             </div>
             <div className="flex justify-between">

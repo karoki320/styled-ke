@@ -205,6 +205,18 @@ export interface Database {
         is_admin: boolean;
         created_at: string;
       }>;
+      hero_slides: Row<{
+        id: string;
+        image_url: string;
+        headline: string | null;
+        subtext: string | null;
+        cta_label: string | null;
+        cta_href: string | null;
+        sort_order: number;
+        is_active: boolean;
+        created_at: string;
+        updated_at: string;
+      }>;
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

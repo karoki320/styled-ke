@@ -75,16 +75,21 @@ export async function POST(req: NextRequest) {
         .single();
       if (orderErr) throw orderErr;
 
-      await supabase.from("order_items").insert(
+      // Note: item.productId currently comes from the client-side catalog
+      // (lib/mock-data.ts), not real Supabase `products` rows, so it is not
+      // a valid uuid yet — product_id is left null (the column is nullable)
+      // until the catalog is migrated into Supabase. product_name/price/qty
+      // fully capture the line item in the meantime.
+      const { error: itemsErr } = await supabase.from("order_items").insert(
         body.items.map((item) => ({
           order_id: order.id,
-          product_id: item.productId,
           product_name: item.name,
           unit_price: item.price,
           quantity: item.qty,
           subtotal: item.price * item.qty,
         }))
       );
+      if (itemsErr) throw itemsErr;
 
       notifyOwnerNewOrder({
         order_number: order.order_number,

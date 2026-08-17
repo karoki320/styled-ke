@@ -1,5 +1,5 @@
 const ITEMS: [string, string][] = [
-  ["🚚", "Free nationwide delivery"],
+  ["🚚", "Nationwide delivery"],
   ["✓", "Authentic products"],
   ["👗", "From KES 1,500"],
   ["💬", "WhatsApp support"],

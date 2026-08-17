@@ -110,10 +110,10 @@ export function CartDrawer() {
             </div>
             <div className="mb-4 flex justify-between">
               <span className="text-[0.82rem] text-gray-400">Delivery</span>
-              <span className="text-[0.82rem] font-semibold text-success">FREE ✓</span>
+              <span className="text-[0.82rem] font-semibold text-gray-400">Calculated at checkout</span>
             </div>
             <div className="mb-3.5 flex justify-between border-t border-border pt-2.5">
-              <span className="pf text-base font-bold">Total</span>
+              <span className="pf text-base font-bold">Subtotal</span>
               <span className="pf text-base font-bold">{fmtKES(sub)}</span>
             </div>
             <Link
