@@ -1,9 +1,8 @@
 import Link from "next/link";
-import { PRODUCTS } from "@/lib/mock-data";
+import type { Product } from "@/types";
 import { ProductCard } from "./ProductCard";
 
-export function FreshArrivals() {
-  const products = PRODUCTS.slice(0, 8);
+export function FreshArrivals({ products }: { products: Product[] }) {
   return (
     <section className="mx-auto max-w-[1400px] px-6 pb-14 pt-16 sm:px-10">
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4">

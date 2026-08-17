@@ -75,14 +75,16 @@ export async function POST(req: NextRequest) {
         .single();
       if (orderErr) throw orderErr;
 
-      // Note: item.productId currently comes from the client-side catalog
-      // (lib/mock-data.ts), not real Supabase `products` rows, so it is not
-      // a valid uuid yet — product_id is left null (the column is nullable)
-      // until the catalog is migrated into Supabase. product_name/price/qty
-      // fully capture the line item in the meantime.
+      // item.productId comes from the storefront's cart, which now sources
+      // products from Supabase (real uuid ids). Guard with a uuid check
+      // anyway so any stale cart still holding an old mock id (e.g. "1")
+      // from before the catalog migration degrades gracefully to null
+      // instead of failing the whole insert.
+      const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       const { error: itemsErr } = await supabase.from("order_items").insert(
         body.items.map((item) => ({
           order_id: order.id,
+          product_id: UUID_RE.test(item.productId) ? item.productId : null,
           product_name: item.name,
           unit_price: item.price,
           quantity: item.qty,

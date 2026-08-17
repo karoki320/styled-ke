@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PRODUCTS } from "@/lib/mock-data";
+import type { Product } from "@/types";
 import { ProductCard } from "./ProductCard";
 import { cn } from "@/lib/utils";
 
@@ -17,8 +17,8 @@ const TITLES: Record<ShopFilter, string> = {
   Sale: "Sale",
 };
 
-export function ShopGrid({ filter }: { filter: ShopFilter }) {
-  const shown = PRODUCTS.filter((p) => {
+export function ShopGrid({ filter, products }: { filter: ShopFilter; products: Product[] }) {
+  const shown = products.filter((p) => {
     if (filter === "Sale") return !!p.compare_price;
     if (filter === "Shop All") return true;
     return p.category === filter;

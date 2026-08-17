@@ -82,8 +82,8 @@ create policy "Admins can delete hero images" on storage.objects
 -- first deploy — edit/replace these from the admin panel any time.
 insert into hero_slides (image_url, headline, subtext, cta_label, cta_href, sort_order)
 select * from (values
-  ('/images/hero/hero-1.png', 'Pleated Chiffon Dress', 'KES 1,500', 'SHOP NOW', '/shop', 1),
-  ('/images/hero/hero-2.png', 'New Arrivals', 'All KES 1,500', 'SHOP NOW', '/shop', 2),
-  ('/images/hero/hero-3.png', 'Marble Print Midi', 'Nationwide Delivery', 'SHOP NOW', '/shop', 3)
+  ('/images/hero/hero-1.jpg', 'Pleated Chiffon Dress', 'KES 1,500', 'SHOP NOW', '/shop', 1),
+  ('/images/hero/hero-2.jpg', 'New Arrivals', 'All KES 1,500', 'SHOP NOW', '/shop', 2),
+  ('/images/hero/hero-3.jpg', 'Marble Print Midi', 'Nationwide Delivery', 'SHOP NOW', '/shop', 3)
 ) as seed(image_url, headline, subtext, cta_label, cta_href, sort_order)
 where not exists (select 1 from hero_slides);

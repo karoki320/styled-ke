@@ -7,7 +7,6 @@ import type { Product } from "@/types";
 import { fmtKES } from "@/lib/utils";
 import { useCartStore } from "@/store/cart";
 import { ProductCard } from "./ProductCard";
-import { getRelatedProducts } from "@/lib/mock-data";
 
 const PERKS = [
   "🚚 Nationwide delivery — fee calculated at checkout",
@@ -16,7 +15,7 @@ const PERKS = [
   "💬 WhatsApp: 0734 807 511",
 ];
 
-export function ProductDetail({ product }: { product: Product }) {
+export function ProductDetail({ product, related }: { product: Product; related: Product[] }) {
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
   const [activeImg, setActiveImg] = useState(product.image);
@@ -27,7 +26,6 @@ export function ProductDetail({ product }: { product: Product }) {
   const discount = product.compare_price
     ? Math.round((1 - product.price / product.compare_price) * 100)
     : null;
-  const related = getRelatedProducts(product);
 
   const handleAdd = () => {
     addItem(product, qty);

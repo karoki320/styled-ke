@@ -4,8 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { waLink } from "@/lib/utils";
-import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
 import { createClient } from "@/lib/supabase/client";
 
 export interface HeroSlide {
@@ -22,7 +20,7 @@ export interface HeroSlide {
 const FALLBACK_SLIDES: HeroSlide[] = [
   {
     id: "fallback-1",
-    image_url: "/images/hero/hero-1.png",
+    image_url: "/images/hero/hero-1.jpg",
     headline: "Pleated Chiffon Dress",
     subtext: "KES 1,500",
     cta_label: "SHOP NOW",
@@ -30,7 +28,7 @@ const FALLBACK_SLIDES: HeroSlide[] = [
   },
   {
     id: "fallback-2",
-    image_url: "/images/hero/hero-2.png",
+    image_url: "/images/hero/hero-2.jpg",
     headline: "New Arrivals",
     subtext: "All KES 1,500",
     cta_label: "SHOP NOW",
@@ -38,7 +36,7 @@ const FALLBACK_SLIDES: HeroSlide[] = [
   },
   {
     id: "fallback-3",
-    image_url: "/images/hero/hero-3.png",
+    image_url: "/images/hero/hero-3.jpg",
     headline: "Marble Print Midi",
     subtext: "Nationwide Delivery",
     cta_label: "SHOP NOW",
@@ -91,7 +89,7 @@ export function Hero() {
   const slide = slides[active] ?? slides[0];
 
   return (
-    <div className="relative h-[88vh] max-h-[840px] min-h-[560px] overflow-hidden">
+    <div className="relative h-[88vh] max-h-[780px] min-h-[520px] overflow-hidden bg-black">
       {slides.map((s, i) => (
         <div
           key={s.id}
@@ -110,28 +108,36 @@ export function Hero() {
             fill
             priority={i === 0}
             sizes="100vw"
-            className="object-cover object-top"
+            className="object-cover object-center"
           />
+          {/* subtle darken so the centered CTA and text stay readable on any photo */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/25" />
         </div>
       ))}
 
-      {(slide?.headline || slide?.subtext) && (
-        <div className="absolute bottom-24 left-5 z-[6] bg-white/[0.88] px-4 py-2 sm:bottom-28 sm:left-8">
-          {slide.headline && (
-            <div className="pf text-[0.95rem] font-bold text-black sm:text-[1.05rem]">
-              {slide.headline}
-            </div>
-          )}
-          {slide.subtext && (
-            <div className="text-[0.68rem] font-semibold uppercase tracking-wide text-gold">
-              {slide.subtext}
-            </div>
-          )}
-        </div>
-      )}
+      {/* Centered ecommerce-style CTA overlay */}
+      <div className="pointer-events-none absolute inset-0 z-[6] flex flex-col items-center justify-center px-6 text-center">
+        {slide?.headline && (
+          <div className="pf mb-1.5 text-[1.5rem] font-bold tracking-tight text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)] sm:text-[2.4rem]">
+            {slide.headline}
+          </div>
+        )}
+        {slide?.subtext && (
+          <div className="mb-5 text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-white/90 drop-shadow-[0_1px_6px_rgba(0,0,0,0.5)] sm:mb-7 sm:text-[0.85rem]">
+            {slide.subtext}
+          </div>
+        )}
+        <Link
+          href={slide?.cta_href || "/shop"}
+          onClick={(e) => e.stopPropagation()}
+          className="pointer-events-auto bg-white px-9 py-3.5 text-[0.72rem] font-bold uppercase tracking-[0.15em] text-black transition-all hover:scale-105 hover:bg-gold hover:text-white sm:px-12 sm:py-4 sm:text-[0.78rem]"
+        >
+          {slide?.cta_label || "SHOP NOW"}
+        </Link>
+      </div>
 
       {slides.length > 1 && (
-        <div className="absolute bottom-16 left-1/2 z-[6] flex -translate-x-1/2 gap-1.5 sm:bottom-[76px]">
+        <div className="absolute bottom-6 left-1/2 z-[6] flex -translate-x-1/2 gap-1.5 sm:bottom-8">
           {slides.map((s, i) => (
             <button
               key={s.id}
@@ -149,58 +155,6 @@ export function Hero() {
           ))}
         </div>
       )}
-
-      <div
-        className="absolute inset-x-0 bottom-0 z-10 flex items-center justify-end gap-2.5 bg-black/[0.72] px-3.5 py-3 backdrop-blur-sm sm:justify-between sm:gap-3 sm:px-10 sm:py-5"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="hidden items-center gap-3.5 sm:flex">
-          <Image
-            src="/images/LOGO.jpg"
-            alt="Styled.ke"
-            width={38}
-            height={38}
-            className="rounded-full border-2 border-gold/50 object-cover"
-          />
-          <div>
-            <div className="pf text-[0.95rem] font-bold leading-none text-white">
-              Styled.ke
-            </div>
-            <div className="text-[0.7rem] uppercase tracking-wide text-white/65">
-              Fashion &amp; Scents · Nairobi
-            </div>
-          </div>
-          <div className="mx-2 h-7 w-px bg-white/15" />
-          <div>
-            <div className="text-[0.7rem] uppercase tracking-wide text-white/65">
-              All clothing from
-            </div>
-            <div className="pf text-base font-bold text-gold">KES 1,500</div>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className="hidden text-[0.65rem] uppercase tracking-wide text-white/50 lg:block">
-            🚚 Nationwide delivery
-          </div>
-          <Link
-            href={slide?.cta_href || "/shop"}
-            onClick={(e) => e.stopPropagation()}
-            className="btn-wht px-5 py-3 text-[0.72rem] sm:px-9 sm:py-3.5 sm:text-[0.75rem]"
-          >
-            {slide?.cta_label || "SHOP NOW"} →
-          </Link>
-          <a
-            href={waLink("Hello Styled.ke! I'm interested in your products ✨")}
-            target="_blank"
-            rel="noreferrer"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <span className="btn-wa px-3.5 py-3 text-[0.68rem] sm:px-5 sm:text-[0.72rem]">
-              <WhatsAppIcon size={14} /> WHATSAPP
-            </span>
-          </a>
-        </div>
-      </div>
     </div>
   );
 }

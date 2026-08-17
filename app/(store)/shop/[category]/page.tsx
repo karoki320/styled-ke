@@ -1,15 +1,14 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ShopGrid, type ShopFilter } from "@/components/store/ShopGrid";
+import { getAllProducts } from "@/lib/supabase/products";
 
 const SLUG_MAP: Record<string, ShopFilter> = {
   clothing: "Clothing",
   sale: "Sale",
 };
 
-export function generateStaticParams() {
-  return Object.keys(SLUG_MAP).map((category) => ({ category }));
-}
+export const dynamic = "force-dynamic";
 
 export function generateMetadata({
   params,
@@ -20,12 +19,13 @@ export function generateMetadata({
   return { title: filter ? `${filter} | Styled.ke` : "Shop | Styled.ke" };
 }
 
-export default function CategoryPage({
+export default async function CategoryPage({
   params,
 }: {
   params: { category: string };
 }) {
   const filter = SLUG_MAP[params.category];
   if (!filter) notFound();
-  return <ShopGrid filter={filter} />;
+  const products = await getAllProducts();
+  return <ShopGrid filter={filter} products={products} />;
 }
