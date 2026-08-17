@@ -1,0 +1,160 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-black: #1a1a1a;
+  --color-white: #ffffff;
+  --color-bg-light: #f8f8f6;
+  --color-gold: #c9a96e;
+  --color-gold-hover: #b8935a;
+  --color-muted: #888888;
+  --color-border: #e8e8e8;
+  --color-whatsapp: #25d366;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: #fff;
+  color: #1a1a1a;
+  font-family: var(--font-inter), "Inter", sans-serif;
+  overflow-x: hidden;
+}
+
+::-webkit-scrollbar {
+  width: 3px;
+}
+::-webkit-scrollbar-track {
+  background: #fff;
+}
+::-webkit-scrollbar-thumb {
+  background: #c9a96e;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pf {
+  font-family: var(--font-playfair), "Playfair Display", serif;
+}
+
+@layer components {
+  /* ─── Buttons — sharp corners ────────────────────────── */
+  .btn-blk {
+    @apply inline-flex items-center gap-2 bg-black text-white border-none font-bold uppercase tracking-widest cursor-pointer rounded-none transition-all duration-250;
+  }
+  .btn-blk:hover {
+    @apply -translate-y-0.5 shadow-lg;
+    background: #000;
+  }
+  .btn-wht {
+    @apply inline-flex items-center gap-2 bg-white text-black border-none font-bold uppercase tracking-widest cursor-pointer rounded-none transition-all duration-250;
+  }
+  .btn-wht:hover {
+    @apply -translate-y-0.5;
+    background: #f0f0f0;
+  }
+  .btn-out {
+    @apply inline-flex items-center gap-2 bg-transparent text-black border-[1.5px] border-black font-bold uppercase tracking-widest cursor-pointer rounded-none transition-all duration-250;
+  }
+  .btn-out:hover {
+    @apply bg-black text-white;
+  }
+  .btn-out-w {
+    @apply inline-flex items-center gap-2 bg-transparent text-white border-[1.5px] border-white/55 font-bold uppercase tracking-widest cursor-pointer rounded-none transition-all duration-250;
+  }
+  .btn-out-w:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  .btn-wa {
+    @apply inline-flex items-center gap-2 bg-whatsapp text-white border-none font-bold uppercase tracking-wide cursor-pointer rounded-none transition-all duration-250;
+  }
+  .btn-wa:hover {
+    background: #128c7e;
+  }
+  .btn-gold {
+    @apply inline-flex items-center gap-2 bg-gold text-white border-none font-bold uppercase tracking-wide cursor-pointer rounded-none transition-all duration-250;
+  }
+  .btn-gold:hover {
+    @apply -translate-y-0.5;
+    background: #b8935a;
+  }
+
+  /* ─── Section labels ─────────────────────────────────── */
+  .sec-label {
+    @apply block mb-1.5 text-[0.6rem] tracking-[0.25em] uppercase font-bold text-gray-400;
+  }
+  .sec-title {
+    @apply pf font-bold text-black leading-tight;
+    font-size: clamp(1.5rem, 3vw, 2.2rem);
+  }
+
+  /* ─── Form controls ───────────────────────────────────── */
+  .field {
+    @apply w-full bg-white border border-[#ddd] text-black px-3.5 py-2.5 outline-none font-sans text-sm rounded-none transition-colors;
+  }
+  .field:focus {
+    @apply border-black;
+  }
+
+  /* ─── Admin ───────────────────────────────────────────── */
+  .kpi {
+    @apply bg-white border border-border p-5 transition-shadow;
+  }
+  .kpi:hover {
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.07);
+  }
+  .anav {
+    @apply flex items-center gap-2.5 w-full text-left bg-none border-none cursor-pointer text-[0.69rem] tracking-wide uppercase font-semibold px-4.5 py-3 text-gray-400 transition-all;
+  }
+  .anav:hover {
+    @apply bg-bg-light text-black;
+  }
+  .anav.act {
+    @apply bg-black text-white;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .duration-250 {
+    transition-duration: 250ms;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   Brighter, more legible button text + bigger mobile tap targets.
+   Written outside @layer so it reliably overrides the per-instance
+   text-[…] size utilities used on individual buttons throughout the
+   app, without having to edit every call site.
+   ───────────────────────────────────────────────────────────────── */
+[class*="btn-"] {
+  font-size: 0.76rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.035em !important;
+  line-height: 1.25 !important;
+}
+
+@media (max-width: 640px) {
+  [class*="btn-"] {
+    font-size: 0.8rem !important;
+    min-height: 44px;
+    padding-top: 0.85rem !important;
+    padding-bottom: 0.85rem !important;
+  }
+}

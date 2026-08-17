@@ -1,0 +1,112 @@
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { useCartStore } from "@/store/cart";
+import { fmtKES, waLink } from "@/lib/utils";
+import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
+
+export default function CartPage() {
+  const { items, updateQty, removeItem } = useCartStore();
+  const sub = items.reduce((s, i) => s + i.price * i.qty, 0);
+
+  if (items.length === 0) {
+    return (
+      <section className="mx-auto max-w-[600px] px-6 py-24 text-center">
+        <div className="mb-4 text-5xl">🛍</div>
+        <h1 className="pf mb-2 text-2xl font-bold">Your cart is empty</h1>
+        <p className="mb-6 text-sm text-muted">
+          Discover our premium collection — all clothing KES 1,500.
+        </p>
+        <Link href="/shop" className="btn-blk px-6 py-3.5 text-[0.72rem]">
+          SHOP NOW →
+        </Link>
+      </section>
+    );
+  }
+
+  return (
+    <section className="mx-auto max-w-[980px] px-6 py-12 sm:px-10">
+      <h1 className="pf mb-8 text-[1.9rem] font-bold">Your Cart</h1>
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1.5fr_1fr]">
+        <div className="border border-border">
+          {items.map((item) => (
+            <div
+              key={item.productId}
+              className="flex gap-4 border-b border-[#f5f5f5] p-4 last:border-b-0"
+            >
+              <Image
+                src={item.image}
+                alt={item.name}
+                width={80}
+                height={100}
+                className="h-[100px] w-20 flex-shrink-0 object-cover object-top"
+              />
+              <div className="flex-1">
+                <div className="mb-1 text-[0.6rem] uppercase tracking-wide text-gray-400">
+                  {item.category}
+                </div>
+                <div className="mb-2 font-semibold">{item.name}</div>
+                <div className="mb-3 font-bold text-gold">{fmtKES(item.price)}</div>
+                <div className="flex items-center gap-2">
+                  <button
+                    className="qty-btn h-7 w-7 border border-border bg-[#f5f5f5] hover:border-black hover:bg-black hover:text-white"
+                    onClick={() => updateQty(item.productId, item.qty - 1)}
+                  >
+                    −
+                  </button>
+                  <span className="w-6 text-center font-bold">{item.qty}</span>
+                  <button
+                    className="qty-btn h-7 w-7 border border-border bg-[#f5f5f5] hover:border-black hover:bg-black hover:text-white"
+                    onClick={() => updateQty(item.productId, item.qty + 1)}
+                  >
+                    +
+                  </button>
+                  <button
+                    onClick={() => removeItem(item.productId)}
+                    className="ml-auto text-[0.7rem] uppercase tracking-wide text-gray-300 hover:text-danger"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+              <div className="font-bold">{fmtKES(item.price * item.qty)}</div>
+            </div>
+          ))}
+        </div>
+
+        <div>
+          <div className="mb-3 border border-border p-5">
+            <div className="mb-1 flex justify-between text-sm">
+              <span className="text-muted">Subtotal</span>
+              <span>{fmtKES(sub)}</span>
+            </div>
+            <div className="mb-3 flex justify-between text-sm">
+              <span className="text-muted">Delivery</span>
+              <span className="font-semibold text-success">FREE ✓</span>
+            </div>
+            <div className="flex justify-between border-t border-border pt-3">
+              <span className="pf font-bold">Total</span>
+              <span className="pf font-bold">{fmtKES(sub)}</span>
+            </div>
+          </div>
+          <Link href="/checkout" className="btn-blk mb-2 w-full justify-center py-3.5 text-[0.73rem]">
+            CHECKOUT →
+          </Link>
+          <a
+            href={waLink(
+              `Hello Styled.ke! 👋 I'd like to order:\n\n${items
+                .map((i) => `🛍 ${i.name} x${i.qty} — ${fmtKES(i.price * i.qty)}`)
+                .join("\n")}\n\n💰 *Total: ${fmtKES(sub)}*\n\nPlease confirm! ✨`
+            )}
+            target="_blank"
+            rel="noreferrer"
+            className="btn-wa w-full justify-center py-2.5 text-[0.69rem]"
+          >
+            <WhatsAppIcon size={12} /> ORDER VIA WHATSAPP
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+}
