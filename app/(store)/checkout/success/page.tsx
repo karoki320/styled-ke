@@ -3,19 +3,19 @@ import { fmtKES } from "@/lib/utils";
 
 const STEPS = [
   ["📦", "Order Placed", "Right now"],
-  ["📞", "We Call You", "Within 30 mins"],
+  ["📧", "Receipt Emailed", "Right now"],
   ["🚚", "Delivery", "1-3 business days"],
 ];
 
 export default function CheckoutSuccessPage({
   searchParams,
 }: {
-  searchParams: { order?: string; name?: string; total?: string; phone?: string };
+  searchParams: { order?: string; name?: string; total?: string; phone?: string; email?: string };
 }) {
   const order = searchParams.order || "#SK-0000";
   const name = searchParams.name || "there";
   const total = Number(searchParams.total || 0);
-  const phone = searchParams.phone || "";
+  const email = searchParams.email || "";
   const firstName = name.split(" ")[0];
 
   return (
@@ -28,8 +28,15 @@ export default function CheckoutSuccessPage({
         <h1 className="pf mb-1.5 text-[1.7rem] font-bold">Thank you, {firstName}! 🌟</h1>
         <div className="mb-1.5 text-[0.88rem] font-bold text-gold">{order}</div>
         <p className="mb-5 text-[0.85rem] leading-loose text-[#777]">
-          Your order of <strong>{fmtKES(total)}</strong> is confirmed. We&apos;ll call
-          you on <strong>{phone}</strong> shortly.
+          Your order of <strong>{fmtKES(total)}</strong> is confirmed.{" "}
+          {email ? (
+            <>
+              A receipt has been sent to <strong>{email}</strong> — no calls, we&apos;ll just get
+              your order to you.
+            </>
+          ) : (
+            <>We don&apos;t call before delivery — we&apos;ll just get your order to you.</>
+          )}
         </p>
         {STEPS.map(([icon, title, sub], i) => (
           <div

@@ -15,7 +15,7 @@ interface FormState {
   phone: string;
   email: string;
   notes: string;
-  payment: "paystack" | "mpesa" | "cod";
+  payment: "paystack" | "mpesa";
   deliveryMethod: DeliveryMethodId;
   address: string;
   city: string;
@@ -136,6 +136,7 @@ export function Checkout() {
         name: form.name,
         total: String(total),
         phone: form.phone,
+        ...(form.email ? { email: form.email } : {}),
       });
       router.push(`/checkout/success?${params.toString()}`);
     } catch (err) {
@@ -198,7 +199,7 @@ export function Checkout() {
               <div className="flex flex-col gap-3">
                 <Field label="Full Name" value={form.name} onChange={(v) => upd("name", v)} placeholder="e.g. Amina Wanjiru" />
                 <Field label="Phone" value={form.phone} onChange={(v) => upd("phone", v)} placeholder="e.g. 0712 345 678" type="tel" />
-                <Field label="Email (optional)" value={form.email} onChange={(v) => upd("email", v)} placeholder="amina@gmail.com" type="email" />
+                <Field label="Email (for your receipt)" value={form.email} onChange={(v) => upd("email", v)} placeholder="amina@gmail.com" type="email" />
                 <div>
                   <label className="mb-1.5 block text-[0.6rem] font-bold uppercase tracking-wide text-[#888]">
                     Order Notes (optional)
@@ -274,7 +275,8 @@ export function Checkout() {
                             ))}
                           </select>
                           <div className="bg-bg-light p-2.5 text-[0.71rem] text-[#555]">
-                            🏍️ Rider contacts you on <strong>{form.phone || "your number"}</strong> to confirm.
+                            📧 We don&apos;t call before delivery — your receipt is emailed the
+                            moment you order, and the rider heads straight out.
                           </div>
                         </>
                       )}
@@ -326,7 +328,6 @@ export function Checkout() {
               {[
                 { id: "paystack" as const, icon: "💳", label: "Card / M-Pesa (Paystack)", desc: "Secure online payment — instant confirmation." },
                 { id: "mpesa" as const, icon: "📱", label: "M-Pesa Paybill", desc: "Pay manually via M-Pesa Paybill." },
-                { id: "cod" as const, icon: "💵", label: "Cash on Delivery", desc: "Pay cash when your order arrives." },
               ].map((pm) => (
                 <div
                   key={pm.id}
@@ -386,11 +387,7 @@ export function Checkout() {
                 ["Fee", delOpt.fee > 0 ? fmtKES(delOpt.fee) : "Quoted on delivery"],
                 [
                   "Payment",
-                  form.payment === "paystack"
-                    ? "Card / M-Pesa (Paystack)"
-                    : form.payment === "mpesa"
-                    ? "M-Pesa Paybill"
-                    : "Cash on Delivery",
+                  form.payment === "paystack" ? "Card / M-Pesa (Paystack)" : "M-Pesa Paybill",
                 ],
               ].map(([l, v]) => (
                 <div key={l} className="flex justify-between border-b border-[#f5f5f5] py-2 text-[0.82rem]">

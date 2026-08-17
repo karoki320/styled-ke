@@ -13,6 +13,9 @@ export interface HeroSlide {
   subtext: string | null;
   cta_label: string | null;
   cta_href: string | null;
+  /** 0-100, where the subject sits horizontally in the photo (50 = center).
+   * Keeps the garment in frame when the crop narrows on small screens. */
+  focal_x?: number;
 }
 
 /** Shown if Supabase isn't configured yet, or no slides have been added in
@@ -25,6 +28,7 @@ const FALLBACK_SLIDES: HeroSlide[] = [
     subtext: "KES 1,500",
     cta_label: "SHOP NOW",
     cta_href: "/shop",
+    focal_x: 25,
   },
   {
     id: "fallback-2",
@@ -33,6 +37,7 @@ const FALLBACK_SLIDES: HeroSlide[] = [
     subtext: "All KES 1,500",
     cta_label: "SHOP NOW",
     cta_href: "/shop",
+    focal_x: 50,
   },
   {
     id: "fallback-3",
@@ -41,6 +46,7 @@ const FALLBACK_SLIDES: HeroSlide[] = [
     subtext: "Nationwide Delivery",
     cta_label: "SHOP NOW",
     cta_href: "/shop",
+    focal_x: 78,
   },
 ];
 
@@ -59,7 +65,7 @@ export function Hero() {
         const supabase = createClient();
         const { data, error } = await supabase
           .from("hero_slides")
-          .select("id, image_url, headline, subtext, cta_label, cta_href")
+          .select("id, image_url, headline, subtext, cta_label, cta_href, focal_x")
           .eq("is_active", true)
           .order("sort_order", { ascending: true });
         if (!cancelled && !error && data && data.length > 0) {
@@ -89,7 +95,7 @@ export function Hero() {
   const slide = slides[active] ?? slides[0];
 
   return (
-    <div className="relative h-[88vh] max-h-[780px] min-h-[520px] overflow-hidden bg-black">
+    <div className="relative h-[58vh] min-h-[420px] overflow-hidden bg-black sm:h-[88vh] sm:max-h-[780px] sm:min-h-[520px]">
       {slides.map((s, i) => (
         <div
           key={s.id}
@@ -108,7 +114,8 @@ export function Hero() {
             fill
             priority={i === 0}
             sizes="100vw"
-            className="object-cover object-center"
+            className="object-cover"
+            style={{ objectPosition: `${s.focal_x ?? 50}% center` }}
           />
           {/* subtle darken so the centered CTA and text stay readable on any photo */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/25" />

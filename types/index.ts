@@ -10,7 +10,7 @@ export type OrderStatus =
   | "cancelled";
 
 export type PaymentStatus = "pending" | "paid" | "failed" | "refunded";
-export type PaymentMethod = "paystack" | "mpesa" | "cod" | "cash_pos";
+export type PaymentMethod = "paystack" | "mpesa" | "cash_pos";
 export type OrderSource = "website" | "pos" | "whatsapp";
 export type DeliveryMethodId = "rider" | "matatu" | "mtaani" | "doorstep";
 

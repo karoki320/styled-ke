@@ -262,7 +262,7 @@ export const ORDERS: Order[] = [
     total: 3000,
     status: "delivered",
     source: "pos",
-    payment_method: "cod",
+    payment_method: "cash_pos",
     payment_status: "paid",
     delivery_method: "rider",
     delivery_location: "Karen",

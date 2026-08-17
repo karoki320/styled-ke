@@ -14,6 +14,7 @@ type DraftSlide = {
   cta_href: string;
   sort_order: number;
   is_active: boolean;
+  focal_x: number;
 };
 
 const emptyDraft: DraftSlide = {
@@ -24,6 +25,7 @@ const emptyDraft: DraftSlide = {
   cta_href: "/shop",
   sort_order: 0,
   is_active: true,
+  focal_x: 50,
 };
 
 export default function AdminHeroPage() {
@@ -43,7 +45,7 @@ export default function AdminHeroPage() {
       const supabase = createClient();
       const { data, error } = await supabase
         .from("hero_slides")
-        .select("id, image_url, headline, subtext, cta_label, cta_href, sort_order, is_active")
+        .select("id, image_url, headline, subtext, cta_label, cta_href, sort_order, is_active, focal_x")
         .order("sort_order", { ascending: true });
       if (error) throw error;
       setSlides(data || []);
@@ -79,6 +81,7 @@ export default function AdminHeroPage() {
       cta_href: s.cta_href || "/shop",
       sort_order: s.sort_order,
       is_active: s.is_active,
+      focal_x: s.focal_x ?? 50,
     });
     setError(null);
     setShowForm(true);
@@ -123,6 +126,7 @@ export default function AdminHeroPage() {
         cta_href: draft.cta_href || null,
         sort_order: draft.sort_order,
         is_active: draft.is_active,
+        focal_x: draft.focal_x,
       };
       if (editing) {
         const { error: updErr } = await supabase.from("hero_slides").update(payload).eq("id", editing);
@@ -313,6 +317,58 @@ export default function AdminHeroPage() {
                 />
                 {uploading && <p className="mt-1 text-[0.68rem] text-gray-400">Uploading…</p>}
               </div>
+
+              {draft.image_url && (
+                <div>
+                  <label className="mb-1.5 block text-[0.6rem] font-bold uppercase tracking-wide text-[#888]">
+                    Photo Focus (keeps the garment in frame on phones)
+                  </label>
+                  <div className="mb-2 flex gap-1.5">
+                    {[
+                      { label: "Left", value: 20 },
+                      { label: "Center", value: 50 },
+                      { label: "Right", value: 80 },
+                    ].map((opt) => (
+                      <button
+                        key={opt.label}
+                        type="button"
+                        onClick={() => setDraft((d) => ({ ...d, focal_x: opt.value }))}
+                        className="flex-1 border py-1.5 text-[0.65rem] font-semibold uppercase tracking-wide"
+                        style={{
+                          borderColor: draft.focal_x === opt.value ? "#1a1a1a" : "#e8e8e8",
+                          background: draft.focal_x === opt.value ? "#1a1a1a" : "#fff",
+                          color: draft.focal_x === opt.value ? "#fff" : "#333",
+                        }}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      value={draft.focal_x}
+                      onChange={(e) => setDraft((d) => ({ ...d, focal_x: Number(e.target.value) }))}
+                      className="flex-1"
+                    />
+                    <div className="relative h-20 w-11 flex-shrink-0 overflow-hidden border border-border bg-[#f5f5f5]">
+                      <Image
+                        src={draft.image_url}
+                        alt=""
+                        fill
+                        sizes="44px"
+                        className="object-cover"
+                        style={{ objectPosition: `${draft.focal_x}% center` }}
+                      />
+                    </div>
+                  </div>
+                  <p className="mt-1 text-[0.65rem] text-gray-400">
+                    The narrow box previews roughly what a phone screen will show.
+                  </p>
+                </div>
+              )}
 
               <div>
                 <label className="mb-1.5 block text-[0.6rem] font-bold uppercase tracking-wide text-[#888]">

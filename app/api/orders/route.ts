@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { generateOrderNumber } from "@/lib/utils";
 import { notifyOwnerNewOrder } from "@/lib/whatsapp";
+import { sendOrderReceiptEmail } from "@/lib/email";
 
 export interface CreateOrderPayload {
   name: string;
@@ -14,7 +15,7 @@ export interface CreateOrderPayload {
   total: number;
   deliveryMethod: string;
   deliveryDetails: Record<string, string>;
-  paymentMethod: "paystack" | "mpesa" | "cod";
+  paymentMethod: "paystack" | "mpesa";
   source?: "website" | "pos" | "whatsapp";
 }
 
@@ -34,6 +35,32 @@ export async function POST(req: NextRequest) {
   const orderNumber = generateOrderNumber();
   const isSupabaseConfigured =
     !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  // We don't call customers to confirm — the emailed receipt is the
+  // confirmation. Fire-and-forget: sendOrderReceiptEmail no-ops quietly if
+  // no email was given or Resend isn't configured yet.
+  const sendReceipt = (finalOrderNumber: string) => {
+    if (!body.email) return;
+    const addressParts = [
+      body.deliveryDetails.delivery_address,
+      body.deliveryDetails.delivery_zone,
+      body.deliveryDetails.delivery_agent,
+      body.deliveryDetails.delivery_city,
+    ].filter(Boolean);
+    sendOrderReceiptEmail({
+      to: body.email,
+      customerName: body.name,
+      orderNumber: finalOrderNumber,
+      items: body.items.map((i) => ({ name: i.name, qty: i.qty, price: i.price })),
+      subtotal: body.subtotal,
+      deliveryFee: body.deliveryFee,
+      total: body.total,
+      deliveryMethod: body.deliveryMethod,
+      deliveryAddress: addressParts.length ? addressParts.join(", ") : undefined,
+    }).catch(() => {
+      // Non-fatal — logged inside sendOrderReceiptEmail.
+    });
+  };
 
   if (isSupabaseConfigured) {
     try {
@@ -68,7 +95,7 @@ export async function POST(req: NextRequest) {
           delivery_method: body.deliveryMethod,
           delivery_notes: body.notes,
           payment_method: body.paymentMethod,
-          payment_status: body.paymentMethod === "cod" ? "pending" : "pending",
+          payment_status: "pending",
           ...body.deliveryDetails,
         })
         .select("id, order_number")
@@ -101,6 +128,7 @@ export async function POST(req: NextRequest) {
       }).catch(() => {
         // Non-fatal — WhatsApp isn't configured yet or the send failed.
       });
+      sendReceipt(order.order_number);
 
       return NextResponse.json({ id: order.id, orderNumber: order.order_number });
     } catch (err) {
@@ -108,6 +136,8 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Mock path — no Supabase configured yet.
+  // Mock path — no Supabase configured yet. Still email a receipt if Resend
+  // is configured, so that piece can be tested/used independently.
+  sendReceipt(orderNumber);
   return NextResponse.json({ id: `mock-${Date.now()}`, orderNumber, mock: true });
 }
