@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { X, Sparkles, ArrowRight } from "lucide-react";
 import { waLink } from "@/lib/utils";
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
 
@@ -97,8 +98,8 @@ export function ChatBot() {
               placeholder="Ask about products or prices…"
               className="field flex-1 py-1.5 text-[0.75rem]"
             />
-            <button className="btn-blk px-3 py-1.5 text-[0.77rem]" onClick={send}>
-              →
+            <button className="btn-blk px-3 py-1.5 text-[0.77rem]" onClick={send} aria-label="Send message">
+              <ArrowRight size={14} />
             </button>
           </div>
           <a
@@ -116,7 +117,7 @@ export function ChatBot() {
         className="fixed bottom-[22px] right-[22px] z-[400] flex h-[52px] w-[52px] items-center justify-center rounded-full bg-black shadow-[0_4px_18px_rgba(0,0,0,0.2)] transition-all hover:scale-105 hover:bg-gold"
         aria-label="Open chat assistant"
       >
-        <span className="text-lg text-white">{open ? "✕" : "✨"}</span>
+        {open ? <X size={22} className="text-white" /> : <Sparkles size={20} className="text-white" />}
       </button>
     </>
   );

@@ -1,6 +1,7 @@
 // Mock data used throughout the app so every page is fully clickable before
 // Supabase is connected. Once live, replace these reads with Supabase queries
 // (see hooks/useProducts.ts, hooks/useOrders.ts for the swap points).
+import { Bike, Bus, MapPin, DoorOpen } from "lucide-react";
 import type {
   Product,
   Category,
@@ -159,7 +160,7 @@ export const DELIVERY_OPTIONS: DeliveryOption[] = [
   {
     id: "rider",
     label: "Rider Delivery",
-    icon: "🏍️",
+    icon: Bike,
     desc: "Boda boda to your door — fee quoted by rider",
     fee: 0,
     feeLabel: "Fee on delivery",
@@ -167,7 +168,7 @@ export const DELIVERY_OPTIONS: DeliveryOption[] = [
   {
     id: "matatu",
     label: "Matatu",
-    icon: "🚌",
+    icon: Bus,
     desc: "Via matatu / public transport",
     fee: 0,
     feeLabel: "Varies by route",
@@ -175,7 +176,7 @@ export const DELIVERY_OPTIONS: DeliveryOption[] = [
   {
     id: "mtaani",
     label: "Pick Up Mtaani",
-    icon: "📍",
+    icon: MapPin,
     desc: "Neighbourhood pickup point — KES 140",
     fee: 140,
     feeLabel: "KES 140",
@@ -183,7 +184,7 @@ export const DELIVERY_OPTIONS: DeliveryOption[] = [
   {
     id: "doorstep",
     label: "Doorstep Pickup",
-    icon: "🚪",
+    icon: DoorOpen,
     desc: "Delivery right to your nearest doorstep",
     fee: 350,
     feeLabel: "KES 350+",

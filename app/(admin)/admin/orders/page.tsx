@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Download, Printer } from "lucide-react";
 import { ORDERS } from "@/lib/mock-data";
 import { fmtKES, formatDate, waLink } from "@/lib/utils";
 import { STATUS_COLORS, STATUS_LABELS } from "@/components/admin/StatusBadge";
@@ -83,8 +84,8 @@ export default function AdminOrdersPage() {
           <span className="sec-label">Management</span>
           <h1 className="pf text-[1.65rem] font-bold">All Orders</h1>
         </div>
-        <button onClick={exportCSV} className="btn-out px-4 py-2 text-[0.65rem]">
-          ⬇ EXPORT CSV
+        <button onClick={exportCSV} className="btn-out gap-1.5 px-4 py-2 text-[0.65rem]">
+          <Download size={13} /> EXPORT CSV
         </button>
       </div>
 
@@ -285,8 +286,8 @@ function OrderDetailDrawer({ order, onClose }: { order: Order; onClose: () => vo
           >
             <WhatsAppIcon size={13} /> SEND WHATSAPP UPDATE
           </a>
-          <button onClick={() => window.print()} className="btn-out w-full justify-center py-3 text-[0.7rem]">
-            🖨 PRINT INVOICE
+          <button onClick={() => window.print()} className="btn-out w-full justify-center gap-1.5 py-3 text-[0.7rem]">
+            <Printer size={14} /> PRINT INVOICE
           </button>
         </div>
       </div>

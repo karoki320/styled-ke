@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
+import { Receipt, Banknote, Smartphone, CreditCard, FileText, CircleCheck, Printer, type LucideIcon } from "lucide-react";
 import { PRODUCTS } from "@/lib/mock-data";
 import { fmtKES } from "@/lib/utils";
 import { usePOSStore, type POSPaymentMethod } from "@/store/pos";
@@ -25,7 +26,7 @@ function OpenSessionScreen({ onOpen }: { onOpen: (float: number) => void }) {
   return (
     <div className="flex min-h-[70vh] items-center justify-center">
       <div className="w-full max-w-sm border border-border bg-white p-8 text-center">
-        <div className="mb-2 text-3xl">🧾</div>
+        <Receipt size={30} className="mx-auto mb-2 text-[#555]" />
         <h1 className="pf mb-1 text-xl font-bold">Open POS Session</h1>
         <p className="mb-5 text-sm text-muted">
           Enter your opening cash float to start selling.
@@ -225,10 +226,10 @@ function POSWorkspace() {
           </div>
 
           <div className="grid grid-cols-2 gap-2">
-            <PayButton icon="💵" label="CASH" onClick={() => setPayment("cash")} disabled={sale.length === 0} />
-            <PayButton icon="📱" label="M-PESA" onClick={() => setPayment("mpesa")} disabled={sale.length === 0} />
-            <PayButton icon="💳" label="CARD" onClick={() => setPayment("card")} disabled={sale.length === 0} />
-            <PayButton icon="📋" label="INVOICE" onClick={() => setPayment("invoice")} disabled={sale.length === 0} />
+            <PayButton icon={Banknote} label="CASH" onClick={() => setPayment("cash")} disabled={sale.length === 0} />
+            <PayButton icon={Smartphone} label="M-PESA" onClick={() => setPayment("mpesa")} disabled={sale.length === 0} />
+            <PayButton icon={CreditCard} label="CARD" onClick={() => setPayment("card")} disabled={sale.length === 0} />
+            <PayButton icon={FileText} label="INVOICE" onClick={() => setPayment("invoice")} disabled={sale.length === 0} />
           </div>
 
           <button
@@ -259,12 +260,12 @@ function POSWorkspace() {
 }
 
 function PayButton({
-  icon,
+  icon: Icon,
   label,
   onClick,
   disabled,
 }: {
-  icon: string;
+  icon: LucideIcon;
   label: string;
   onClick: () => void;
   disabled?: boolean;
@@ -273,9 +274,9 @@ function PayButton({
     <button
       onClick={onClick}
       disabled={disabled}
-      className="btn-blk min-h-[52px] justify-center text-[0.72rem] disabled:cursor-not-allowed disabled:opacity-40"
+      className="btn-blk min-h-[52px] justify-center gap-1.5 text-[0.72rem] disabled:cursor-not-allowed disabled:opacity-40"
     >
-      {icon} {label}
+      <Icon size={15} /> {label}
     </button>
   );
 }
@@ -367,7 +368,7 @@ function ReceiptModal({
   return (
     <div className="fixed inset-0 z-[600] flex items-center justify-center bg-black/45 p-5" onClick={onClose}>
       <div className="w-full max-w-xs bg-white p-6 text-center" onClick={(e) => e.stopPropagation()}>
-        <div className="mb-2 text-3xl">✅</div>
+        <CircleCheck size={34} className="mx-auto mb-2 text-success" />
         <div className="pf mb-1 text-lg font-bold">Sale Complete</div>
         <div className="mb-4 text-sm font-semibold text-gold">{receipt.orderNo}</div>
         <div className="mb-5 border-t border-dashed border-border pt-4 text-left text-sm">
@@ -388,8 +389,8 @@ function ReceiptModal({
           </div>
         </div>
         <div className="flex flex-col gap-2">
-          <button onClick={() => window.print()} className="btn-out w-full justify-center py-2.5 text-[0.68rem]">
-            🖨 PRINT RECEIPT
+          <button onClick={() => window.print()} className="btn-out w-full justify-center gap-1.5 py-2.5 text-[0.68rem]">
+            <Printer size={13} /> PRINT RECEIPT
           </button>
           <button onClick={onClose} className="btn-blk w-full justify-center py-2.5 text-[0.68rem]">
             NEW SALE

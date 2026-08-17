@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { Heart } from "lucide-react";
 import type { Product } from "@/types";
 import { fmtKES } from "@/lib/utils";
 import { useCartStore } from "@/store/cart";
@@ -69,7 +70,7 @@ export function ProductCard({ product }: { product: Product }) {
             style={{ color: wish ? "#e74c3c" : "#999" }}
             aria-label="Toggle wishlist"
           >
-            {wish ? "♥" : "♡"}
+            <Heart size={15} fill={wish ? "currentColor" : "none"} />
           </button>
           {product.colors && product.colors.length > 1 && (
             <div className="absolute bottom-2.5 left-2 z-[1] flex gap-0.5">

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ShoppingBag } from "lucide-react";
 import { LogoMark } from "./LogoMark";
 import { useCartStore } from "@/store/cart";
 import { cn } from "@/lib/utils";
@@ -100,7 +101,7 @@ export function NavBar() {
             onClick={openCart}
             className="relative flex items-center gap-1.5 py-1.5 text-[0.7rem] font-semibold uppercase tracking-wide text-black transition-colors hover:text-gold"
           >
-            🛍 Cart
+            <ShoppingBag size={15} /> Cart
             {cartCount > 0 && (
               <span className="absolute -right-2.5 -top-1.5 flex h-[17px] w-[17px] items-center justify-center rounded-full bg-black text-[0.57rem] font-bold text-white">
                 {cartCount}
@@ -114,9 +115,9 @@ export function NavBar() {
           <button
             onClick={openCart}
             aria-label="Open cart"
-            className="relative flex h-11 w-11 items-center justify-center text-[1.15rem]"
+            className="relative flex h-11 w-11 items-center justify-center"
           >
-            🛍
+            <ShoppingBag size={19} />
             {cartCount > 0 && (
               <span className="absolute right-0.5 top-0.5 flex h-[17px] w-[17px] items-center justify-center rounded-full bg-black text-[0.57rem] font-bold text-white">
                 {cartCount}

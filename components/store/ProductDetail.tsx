@@ -3,16 +3,17 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { Truck, CircleCheck, Package, MessageCircle, type LucideIcon } from "lucide-react";
 import type { Product } from "@/types";
 import { fmtKES } from "@/lib/utils";
 import { useCartStore } from "@/store/cart";
 import { ProductCard } from "./ProductCard";
 
-const PERKS = [
-  "🚚 Nationwide delivery — fee calculated at checkout",
-  "✓ Authentic Styled.ke product",
-  "📦 Premium packaging",
-  "💬 WhatsApp: 0734 807 511",
+const PERKS: [LucideIcon, string][] = [
+  [Truck, "Nationwide delivery — fee calculated at checkout"],
+  [CircleCheck, "Authentic Styled.ke product"],
+  [Package, "Premium packaging"],
+  [MessageCircle, "WhatsApp: 0734 807 511"],
 ];
 
 export function ProductDetail({ product, related }: { product: Product; related: Product[] }) {
@@ -159,9 +160,13 @@ export function ProductDetail({ product, related }: { product: Product; related:
           </div>
 
           <div className="mt-5 border-t border-border pt-4">
-            {PERKS.map((f) => (
-              <div key={f} className="border-b border-[#f0f0f0] py-1.5 text-[0.75rem] text-[#666]">
-                {f}
+            {PERKS.map(([Icon, text]) => (
+              <div
+                key={text}
+                className="flex items-center gap-2 border-b border-[#f0f0f0] py-1.5 text-[0.75rem] text-[#666]"
+              >
+                <Icon size={14} className="flex-shrink-0 text-[#999]" />
+                {text}
               </div>
             ))}
           </div>

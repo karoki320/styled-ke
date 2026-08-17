@@ -1,10 +1,11 @@
 import Link from "next/link";
+import { PackageCheck, Mail, Truck, type LucideIcon } from "lucide-react";
 import { fmtKES } from "@/lib/utils";
 
-const STEPS = [
-  ["📦", "Order Placed", "Right now"],
-  ["📧", "Receipt Emailed", "Right now"],
-  ["🚚", "Delivery", "1-3 business days"],
+const STEPS: [LucideIcon, string, string][] = [
+  [PackageCheck, "Order Placed", "Right now"],
+  [Mail, "Receipt Emailed", "Right now"],
+  [Truck, "Delivery", "1-3 business days"],
 ];
 
 export default function CheckoutSuccessPage({
@@ -20,12 +21,14 @@ export default function CheckoutSuccessPage({
 
   return (
     <section className="mx-auto max-w-[520px] px-5 py-20 text-center">
-      <div className="mb-3 text-5xl">🎉</div>
+      <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-[#eefaf1]">
+        <PackageCheck size={32} className="text-success" strokeWidth={1.75} />
+      </div>
       <div className="border border-border p-8">
         <div className="mb-4.5 inline-block bg-black px-3.5 py-1.5 text-[0.6rem] font-bold uppercase tracking-[0.2em] text-white">
           Order Confirmed!
         </div>
-        <h1 className="pf mb-1.5 text-[1.7rem] font-bold">Thank you, {firstName}! 🌟</h1>
+        <h1 className="pf mb-1.5 text-[1.7rem] font-bold">Thank you, {firstName}!</h1>
         <div className="mb-1.5 text-[0.88rem] font-bold text-gold">{order}</div>
         <p className="mb-5 text-[0.85rem] leading-loose text-[#777]">
           Your order of <strong>{fmtKES(total)}</strong> is confirmed.{" "}
@@ -38,12 +41,12 @@ export default function CheckoutSuccessPage({
             <>We don&apos;t call before delivery — we&apos;ll just get your order to you.</>
           )}
         </p>
-        {STEPS.map(([icon, title, sub], i) => (
+        {STEPS.map(([Icon, title, sub], i) => (
           <div
             key={title}
             className="mb-1.5 flex items-center gap-2.5 bg-bg-light p-3 text-left"
           >
-            <span className="text-lg">{icon}</span>
+            <Icon size={17} className="flex-shrink-0 text-[#555]" />
             <div>
               <div className="text-[0.83rem] font-semibold">{title}</div>
               <div className="text-[0.7rem] text-gray-400">{sub}</div>

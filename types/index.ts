@@ -74,7 +74,7 @@ export interface CartLineItem {
 export interface DeliveryOption {
   id: DeliveryMethodId;
   label: string;
-  icon: string;
+  icon: import("lucide-react").LucideIcon;
   desc: string;
   fee: number;
   feeLabel: string;

@@ -1,12 +1,15 @@
+import type { LucideIcon } from "lucide-react";
+import { TrendingUp } from "lucide-react";
+
 export function KPICard({
-  icon,
+  icon: Icon,
   value,
   label,
   sub,
   subColor = "#27ae60",
   valueColor,
 }: {
-  icon: string;
+  icon: LucideIcon;
   value: string;
   label: string;
   sub?: string;
@@ -16,8 +19,12 @@ export function KPICard({
   return (
     <div className="kpi">
       <div className="mb-2.5 flex items-center justify-between">
-        <span className="text-2xl">{icon}</span>
-        <span className="bg-[#efffef] px-1.5 py-0.5 text-[0.58rem] font-bold text-success">↑</span>
+        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f5f5f5] text-[#555]">
+          <Icon size={17} strokeWidth={2} />
+        </span>
+        <span className="flex items-center gap-0.5 bg-[#efffef] px-1.5 py-0.5 text-[0.58rem] font-bold text-success">
+          <TrendingUp size={11} strokeWidth={2.5} />
+        </span>
       </div>
       <div className="pf mb-1 text-[1.35rem] font-bold" style={valueColor ? { color: valueColor } : undefined}>
         {value}

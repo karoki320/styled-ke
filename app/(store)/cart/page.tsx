@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { ShoppingBag } from "lucide-react";
 import { useCartStore } from "@/store/cart";
 import { fmtKES } from "@/lib/utils";
 
@@ -12,7 +13,7 @@ export default function CartPage() {
   if (items.length === 0) {
     return (
       <section className="mx-auto max-w-[600px] px-6 py-24 text-center">
-        <div className="mb-4 text-5xl">🛍</div>
+        <ShoppingBag size={44} className="mx-auto mb-4 text-[#bbb]" strokeWidth={1.5} />
         <h1 className="pf mb-2 text-2xl font-bold">Your cart is empty</h1>
         <p className="mb-6 text-sm text-muted">
           Discover our premium collection — all clothing KES 1,500.

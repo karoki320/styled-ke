@@ -1,16 +1,17 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { FileText, CircleCheck, Package, Truck, PartyPopper, type LucideIcon } from "lucide-react";
 import { ORDERS } from "@/lib/mock-data";
 import { fmtKES, formatDate, waLink } from "@/lib/utils";
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
 import type { OrderStatus } from "@/types";
 
-const TIMELINE: { key: OrderStatus; label: string; icon: string }[] = [
-  { key: "pending", label: "Placed", icon: "📝" },
-  { key: "confirmed", label: "Confirmed", icon: "✅" },
-  { key: "processing", label: "Processing", icon: "📦" },
-  { key: "shipped", label: "Shipped", icon: "🚚" },
-  { key: "delivered", label: "Delivered", icon: "🎉" },
+const TIMELINE: { key: OrderStatus; label: string; icon: LucideIcon }[] = [
+  { key: "pending", label: "Placed", icon: FileText },
+  { key: "confirmed", label: "Confirmed", icon: CircleCheck },
+  { key: "processing", label: "Processing", icon: Package },
+  { key: "shipped", label: "Shipped", icon: Truck },
+  { key: "delivered", label: "Delivered", icon: PartyPopper },
 ];
 
 export default function OrderTrackingPage({ params }: { params: { id: string } }) {
@@ -45,7 +46,7 @@ export default function OrderTrackingPage({ params }: { params: { id: string } }
                     color: i <= currentIndex ? "#fff" : "#bbb",
                   }}
                 >
-                  {step.icon}
+                  <step.icon size={16} />
                 </div>
                 <div className={`h-px flex-1 ${i === TIMELINE.length - 1 ? "bg-transparent" : i < currentIndex ? "bg-black" : "bg-border"}`} />
               </div>

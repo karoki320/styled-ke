@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Wallet, Package, Users, Shirt, TriangleAlert } from "lucide-react";
 import { ORDERS, PRODUCTS } from "@/lib/mock-data";
 import { fmtKES, formatDate } from "@/lib/utils";
 import { KPICard } from "@/components/admin/KPICard";
@@ -26,20 +27,20 @@ export default function AdminDashboardPage() {
       <div className="mb-6">
         <span className="sec-label">Overview</span>
         <h1 className="pf text-[1.65rem] font-bold">
-          Dashboard — you made {fmtKES(totalRevenue)} this month 🎉
+          Dashboard — you made {fmtKES(totalRevenue)} this month
         </h1>
       </div>
 
       <div className="mb-5.5 grid grid-cols-2 gap-2.5 lg:grid-cols-4">
-        <KPICard icon="💰" value={fmtKES(totalRevenue)} label="Total Revenue" sub="+22% this month" />
-        <KPICard icon="📦" value={String(ORDERS.length)} label="Total Orders" sub={`${ORDERS.filter((o) => o.status === "pending").length} need attention`} subColor="#e74c3c" />
-        <KPICard icon="👥" value="847" label="Customers" sub="+18 this week" />
-        <KPICard icon="👗" value={fmtKES(avgOrder)} label="Avg Order" sub="All clothing KES 1,500" />
+        <KPICard icon={Wallet} value={fmtKES(totalRevenue)} label="Total Revenue" sub="+22% this month" />
+        <KPICard icon={Package} value={String(ORDERS.length)} label="Total Orders" sub={`${ORDERS.filter((o) => o.status === "pending").length} need attention`} subColor="#e74c3c" />
+        <KPICard icon={Users} value="847" label="Customers" sub="+18 this week" />
+        <KPICard icon={Shirt} value={fmtKES(avgOrder)} label="Avg Order" sub="All clothing KES 1,500" />
       </div>
 
       {lowStock.length > 0 && (
         <div className="mb-5.5 flex items-center gap-3 border border-warning/30 bg-warning/5 px-4 py-3 text-sm">
-          <span className="text-lg">⚠️</span>
+          <TriangleAlert size={18} className="flex-shrink-0 text-warning" />
           <span>
             <strong>{lowStock.length} product{lowStock.length > 1 ? "s" : ""}</strong> running low on
             stock —{" "}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Users, Repeat, Gem } from "lucide-react";
 import { CUSTOMERS } from "@/lib/mock-data";
 import { fmtKES, formatDate, waLink } from "@/lib/utils";
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
@@ -26,17 +27,17 @@ export default function AdminCustomersPage() {
 
       <div className="mb-4.5 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
         <div className="kpi">
-          <span className="text-[1.3rem]">👥</span>
+          <Users size={20} className="text-[#555]" />
           <div className="pf mt-1.5 text-[1.25rem] font-bold text-gold">847</div>
           <div className="mt-1 text-[0.62rem] uppercase tracking-wide text-gray-400">Total Customers</div>
         </div>
         <div className="kpi">
-          <span className="text-[1.3rem]">🔄</span>
+          <Repeat size={20} className="text-[#555]" />
           <div className="pf mt-1.5 text-[1.25rem] font-bold text-gold">68%</div>
           <div className="mt-1 text-[0.62rem] uppercase tracking-wide text-gray-400">Returning Rate</div>
         </div>
         <div className="kpi">
-          <span className="text-[1.3rem]">💎</span>
+          <Gem size={20} className="text-[#555]" />
           <div className="pf mt-1.5 text-[1.25rem] font-bold text-gold">KES 12,400</div>
           <div className="mt-1 text-[0.62rem] uppercase tracking-wide text-gray-400">Avg Lifetime Value</div>
         </div>

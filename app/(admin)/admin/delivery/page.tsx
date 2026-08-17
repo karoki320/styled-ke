@@ -40,7 +40,7 @@ export default function AdminDeliveryPage() {
             {DELIVERY_OPTIONS.map((opt) => (
               <div key={opt.id} className="flex items-center justify-between border border-[#f0f0f0] p-3">
                 <div className="flex items-center gap-2.5">
-                  <span className="text-lg">{opt.icon}</span>
+                  <opt.icon size={19} className="flex-shrink-0 text-[#555]" />
                   <div>
                     <div className="text-[0.82rem] font-semibold">{opt.label}</div>
                     <div className="text-[0.68rem] text-gray-400">{opt.desc}</div>

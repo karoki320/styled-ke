@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import NextImage from "next/image";
 import Link from "next/link";
+import { ShoppingBag, CreditCard, Smartphone, Mail, DoorOpen } from "lucide-react";
 import { useCartStore } from "@/store/cart";
 import { fmtKES, waLink } from "@/lib/utils";
 import { DELIVERY_OPTIONS } from "@/lib/mock-data";
@@ -60,7 +61,7 @@ export function Checkout() {
   if (items.length === 0) {
     return (
       <section className="mx-auto max-w-[600px] px-6 py-24 text-center">
-        <div className="mb-4 text-5xl">🛍</div>
+        <ShoppingBag size={44} className="mx-auto mb-4 text-[#bbb]" strokeWidth={1.5} />
         <h1 className="pf mb-2 text-2xl font-bold">Nothing to check out yet</h1>
         <p className="mb-6 text-sm text-muted">Add something to your cart first.</p>
         <Link href="/shop" className="btn-blk px-6 py-3.5 text-[0.72rem]">
@@ -242,7 +243,7 @@ export function Checkout() {
                   }}
                 >
                   <div className="flex items-center gap-2.5">
-                    <span className="text-[1.3rem]">{opt.icon}</span>
+                    <opt.icon size={20} className="flex-shrink-0 text-[#555]" />
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
                         <div className="text-[0.84rem] font-bold">{opt.label}</div>
@@ -274,9 +275,12 @@ export function Checkout() {
                               <option key={c}>{c}</option>
                             ))}
                           </select>
-                          <div className="bg-bg-light p-2.5 text-[0.71rem] text-[#555]">
-                            📧 We don&apos;t call before delivery — your receipt is emailed the
-                            moment you order, and the rider heads straight out.
+                          <div className="flex items-start gap-1.5 bg-bg-light p-2.5 text-[0.71rem] text-[#555]">
+                            <Mail size={14} className="mt-0.5 flex-shrink-0" />
+                            <span>
+                              We don&apos;t call before delivery — your receipt is emailed the
+                              moment you order, and the rider heads straight out.
+                            </span>
                           </div>
                         </>
                       )}
@@ -295,8 +299,9 @@ export function Checkout() {
                       {opt.id === "doorstep" && (
                         <>
                           <Field label="Pickup Address" value={form.pickupAddress} onChange={(v) => upd("pickupAddress", v)} placeholder="e.g. Opp. Total Petrol, Huruma" />
-                          <div className="border border-[#b7efc5] bg-[#f0fff4] p-2.5 text-[0.71rem] text-[#555]">
-                            🚪 Final price confirmed via WhatsApp based on exact location.
+                          <div className="flex items-start gap-1.5 border border-[#b7efc5] bg-[#f0fff4] p-2.5 text-[0.71rem] text-[#555]">
+                            <DoorOpen size={14} className="mt-0.5 flex-shrink-0" />
+                            <span>Final price confirmed via WhatsApp based on exact location.</span>
                           </div>
                         </>
                       )}
@@ -326,8 +331,8 @@ export function Checkout() {
             <div>
               <div className="pf mb-4 text-[1.05rem] font-bold">Payment Method</div>
               {[
-                { id: "paystack" as const, icon: "💳", label: "Card / M-Pesa (Paystack)", desc: "Secure online payment — instant confirmation." },
-                { id: "mpesa" as const, icon: "📱", label: "M-Pesa Paybill", desc: "Pay manually via M-Pesa Paybill." },
+                { id: "paystack" as const, icon: CreditCard, label: "Card / M-Pesa (Paystack)", desc: "Secure online payment — instant confirmation." },
+                { id: "mpesa" as const, icon: Smartphone, label: "M-Pesa Paybill", desc: "Pay manually via M-Pesa Paybill." },
               ].map((pm) => (
                 <div
                   key={pm.id}
@@ -339,7 +344,7 @@ export function Checkout() {
                   }}
                 >
                   <div className="flex items-center gap-2.5">
-                    <span className="text-[1.3rem]">{pm.icon}</span>
+                    <pm.icon size={20} className="flex-shrink-0 text-[#555]" />
                     <div>
                       <div className="text-[0.84rem] font-bold">{pm.label}</div>
                       <div className="text-[0.7rem] text-gray-400">{pm.desc}</div>

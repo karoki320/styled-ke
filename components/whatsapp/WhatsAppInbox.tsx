@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Bot } from "lucide-react";
 import { WHATSAPP_CONVERSATIONS, WHATSAPP_MESSAGES } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 import type { WhatsAppConversation } from "@/types";
@@ -115,7 +116,11 @@ export function WhatsAppInbox() {
                     )}
                   >
                     {m.content}
-                    {m.is_bot && <div className="mt-1 text-[0.58rem] uppercase text-gray-400">🤖 Bot reply</div>}
+                    {m.is_bot && (
+                      <div className="mt-1 flex items-center gap-1 text-[0.58rem] uppercase text-gray-400">
+                        <Bot size={11} /> Bot reply
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

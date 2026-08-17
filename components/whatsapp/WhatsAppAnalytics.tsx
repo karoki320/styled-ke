@@ -1,20 +1,23 @@
+import { Send, CircleCheck, Timer, CheckCheck, type LucideIcon } from "lucide-react";
 import { AUTOMATION_FLOWS } from "@/lib/mock-data";
 
 export function WhatsAppAnalytics() {
   const topFlows = [...AUTOMATION_FLOWS].sort((a, b) => b.trigger_count - a.trigger_count).slice(0, 5);
   const maxTriggers = topFlows[0]?.trigger_count || 1;
 
+  const STATS: { l: string; v: string; ic: LucideIcon }[] = [
+    { l: "Messages Sent Today", v: "218", ic: Send },
+    { l: "Delivery Rate", v: "98.4%", ic: CircleCheck },
+    { l: "Avg Response Time", v: "4m", ic: Timer },
+    { l: "Conversations Resolved", v: "36", ic: CheckCheck },
+  ];
+
   return (
     <div>
       <div className="mb-4 grid grid-cols-2 gap-2.5 lg:grid-cols-4">
-        {[
-          { l: "Messages Sent Today", v: "218", ic: "📤" },
-          { l: "Delivery Rate", v: "98.4%", ic: "✅" },
-          { l: "Avg Response Time", v: "4m", ic: "⏱" },
-          { l: "Conversations Resolved", v: "36", ic: "✔" },
-        ].map((k) => (
+        {STATS.map((k) => (
           <div key={k.l} className="kpi">
-            <span className="text-xl">{k.ic}</span>
+            <k.ic size={18} className="text-[#555]" />
             <div className="pf mt-1.5 text-xl font-bold text-gold">{k.v}</div>
             <div className="mt-1 text-[0.6rem] uppercase tracking-wide text-gray-400">{k.l}</div>
           </div>

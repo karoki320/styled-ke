@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { ShoppingBag } from "lucide-react";
 import { useCartStore } from "@/store/cart";
 import { fmtKES } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -41,7 +42,7 @@ export function CartDrawer() {
         <div className="flex-1 overflow-y-auto px-4 py-2.5">
           {items.length === 0 ? (
             <div className="px-5 py-14 text-center">
-              <div className="mb-3 text-4xl">🛍</div>
+              <ShoppingBag size={36} className="mx-auto mb-3 text-[#bbb]" strokeWidth={1.5} />
               <div className="pf mb-2 text-base">Your cart is empty</div>
               <p className="mb-5 text-[0.8rem] text-gray-400">
                 Discover our premium collection
