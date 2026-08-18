@@ -32,10 +32,17 @@ export default function AdminDashboardPage() {
       </div>
 
       <div className="mb-5.5 grid grid-cols-2 gap-2.5 lg:grid-cols-4">
-        <KPICard icon={Wallet} value={fmtKES(totalRevenue)} label="Total Revenue" sub="+22% this month" />
-        <KPICard icon={Package} value={String(ORDERS.length)} label="Total Orders" sub={`${ORDERS.filter((o) => o.status === "pending").length} need attention`} subColor="#e74c3c" />
-        <KPICard icon={Users} value="847" label="Customers" sub="+18 this week" />
-        <KPICard icon={Shirt} value={fmtKES(avgOrder)} label="Avg Order" sub="All clothing KES 1,500" />
+        <KPICard icon={Wallet} value={fmtKES(totalRevenue)} label="Total Revenue" trend="+22%" tone="hero" />
+        <KPICard
+          icon={Package}
+          value={String(ORDERS.length)}
+          label="Total Orders"
+          sub={`${ORDERS.filter((o) => o.status === "pending").length} need attention`}
+          subColor="#e74c3c"
+          tone="ink"
+        />
+        <KPICard icon={Users} value="847" label="Customers" trend="+18" tone="gold" />
+        <KPICard icon={Shirt} value={fmtKES(avgOrder)} label="Avg Order" sub="All clothing KES 1,500" tone="line" />
       </div>
 
       {lowStock.length > 0 && (
@@ -53,32 +60,45 @@ export default function AdminDashboardPage() {
       )}
 
       <div className="mb-4 grid grid-cols-1 gap-3.5 lg:grid-cols-[1.6fr_1fr]">
-        <div className="border border-border bg-white p-4.5">
-          <div className="pf mb-4 text-[0.95rem] font-bold">Monthly Revenue (KES)</div>
-          <div className="flex h-[110px] items-end gap-1.5">
-            {MONTHLY.map((d) => (
-              <div key={d.m} className="flex flex-1 flex-col items-center gap-1">
-                <div className="flex h-[86px] w-full items-end bg-[#f5f5f5]">
+        <div className="border border-border bg-white p-4.5 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <div className="pf text-[0.95rem] font-bold">Monthly Revenue (KES)</div>
+            <div className="text-[0.62rem] font-semibold uppercase tracking-wide text-gray-400">
+              Last 6 months
+            </div>
+          </div>
+          <div className="flex h-[110px] items-end gap-2">
+            {MONTHLY.map((d) => {
+              const isPeak = d.m === "Aug";
+              return (
+                <div key={d.m} className="group flex flex-1 flex-col items-center gap-1.5">
+                  <div className="relative flex h-[86px] w-full items-end justify-center bg-[#fafafa]">
+                    <div
+                      className="pointer-events-none absolute -top-6 whitespace-nowrap bg-black px-1.5 py-0.5 text-[0.56rem] font-bold text-white opacity-0 transition-opacity group-hover:opacity-100"
+                    >
+                      {fmtKES(d.v)}
+                    </div>
+                    <div
+                      className="w-full rounded-t-sm transition-all"
+                      style={{
+                        height: `${Math.max((d.v / maxV) * 100, 6)}%`,
+                        background: isPeak ? "#c9a96e" : "#1a1a1a",
+                        opacity: isPeak ? 1 : 0.45,
+                      }}
+                    />
+                  </div>
                   <div
-                    className="w-full transition-all"
-                    style={{
-                      height: `${(d.v / maxV) * 100}%`,
-                      background: d.m === "Aug" ? "#c9a96e" : "#1a1a1a",
-                      opacity: d.m === "Aug" ? 1 : 0.22,
-                    }}
-                  />
+                    className="text-[0.6rem]"
+                    style={{ color: isPeak ? "#c9a96e" : "#9a9a9a", fontWeight: isPeak ? 700 : 500 }}
+                  >
+                    {d.m}
+                  </div>
                 </div>
-                <div
-                  className="text-[0.6rem]"
-                  style={{ color: d.m === "Aug" ? "#c9a96e" : "#bbb", fontWeight: d.m === "Aug" ? 700 : 400 }}
-                >
-                  {d.m}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
-        <div className="border border-border bg-white p-4.5">
+        <div className="border border-border bg-white p-4.5 shadow-sm">
           <div className="pf mb-3.5 text-[0.95rem] font-bold">By Category</div>
           {CATEGORY_SPLIT.map((c) => (
             <div key={c.cat} className="mb-3">
@@ -94,7 +114,7 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      <div className="border border-border bg-white p-4.5">
+      <div className="border border-border bg-white p-4.5 shadow-sm">
         <div className="mb-3.5 flex items-center justify-between">
           <div className="pf text-[0.95rem] font-bold">Recent Orders</div>
           <Link href="/admin/orders" className="btn-out px-2.5 py-1 text-[0.6rem]">

@@ -113,20 +113,25 @@ a {
 
   /* ─── Admin ───────────────────────────────────────────── */
   .kpi {
-    @apply bg-white border border-border p-5 transition-shadow;
+    @apply relative overflow-hidden bg-white border border-border p-5 transition-all duration-250;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   }
   .kpi:hover {
-    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.07);
+    @apply -translate-y-0.5;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
   }
   .anav {
-    @apply flex items-center gap-2.5 w-full text-left bg-none border-none cursor-pointer text-[0.69rem] tracking-wide uppercase font-semibold px-4.5 py-3 transition-all;
-    color: #5c5c5c;
+    @apply relative flex items-center gap-2.5 w-full text-left bg-none border-l-2 border-transparent cursor-pointer text-[0.69rem] tracking-wide uppercase font-semibold px-4 py-3 transition-all;
+    color: #9a9a95;
   }
   .anav:hover {
-    @apply bg-bg-light text-black;
+    @apply text-white;
+    background: rgba(255, 255, 255, 0.05);
   }
   .anav.act {
-    @apply bg-black text-white;
+    @apply text-gold;
+    background: rgba(201, 169, 110, 0.1);
+    border-left-color: #c9a96e;
   }
 }
 
