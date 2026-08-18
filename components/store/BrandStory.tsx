@@ -12,7 +12,7 @@ const FEATURES = [
 
 export function BrandStory() {
   return (
-    <section className="bg-bg-light px-6 py-16 sm:px-10">
+    <section className="bg-cream-card px-6 py-16 sm:px-10">
       <div className="mx-auto grid max-w-[1200px] grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-[72px]">
         <div className="grid grid-cols-2 gap-[3px]">
           <div className="relative row-span-2 aspect-[3/4]">

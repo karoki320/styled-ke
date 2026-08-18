@@ -48,7 +48,7 @@ export function ChatBot() {
   return (
     <>
       {open && (
-        <div className="animate-chatUp fixed bottom-[86px] right-[22px] z-[400] flex h-[440px] w-[325px] flex-col border border-border bg-white shadow-[0_20px_60px_rgba(0,0,0,0.12)]">
+        <div className="animate-chatUp fixed bottom-[86px] right-[22px] z-[400] flex h-[440px] w-[325px] flex-col border border-border bg-cream-card shadow-[0_20px_60px_rgba(0,0,0,0.12)]">
           <div className="flex items-center gap-2.5 bg-black px-3.5 py-3">
             <Image
               src="/images/LOGO.jpg"
@@ -81,7 +81,7 @@ export function ChatBot() {
                   className={`max-w-[85%] px-2.5 py-2 text-[0.77rem] leading-relaxed ${
                     m.from === "user"
                       ? "bg-black text-white"
-                      : "border border-border bg-white text-black"
+                      : "border border-border bg-cream-card text-black"
                   }`}
                 >
                   {m.text}
@@ -90,7 +90,7 @@ export function ChatBot() {
             ))}
             <div ref={endRef} />
           </div>
-          <div className="flex gap-1.5 border-t border-border bg-white p-2">
+          <div className="flex gap-1.5 border-t border-border bg-cream-card p-2">
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -106,7 +106,7 @@ export function ChatBot() {
             href={waLink("Hello Styled.ke! I was chatting with Style AI ✨")}
             target="_blank"
             rel="noreferrer"
-            className="flex items-center justify-center gap-1.5 border-t border-[#f0f0f0] bg-white p-1.5 text-[0.64rem] text-whatsapp"
+            className="flex items-center justify-center gap-1.5 border-t border-[#f0f0f0] bg-cream-card p-1.5 text-[0.64rem] text-whatsapp"
           >
             <WhatsAppIcon size={10} /> Continue on WhatsApp · 0734 807 511
           </a>

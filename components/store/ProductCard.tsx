@@ -30,7 +30,7 @@ export function ProductCard({ product }: { product: Product }) {
 
   return (
     <div
-      className="group relative cursor-pointer bg-white"
+      className="group relative cursor-pointer bg-cream-card"
       onMouseEnter={() => product.alt_image && setHover(true)}
       onMouseLeave={() => setHover(false)}
     >
@@ -66,7 +66,7 @@ export function ProductCard({ product }: { product: Product }) {
               e.stopPropagation();
               setWish(!wish);
             }}
-            className="absolute right-2.5 top-2.5 z-[2] flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-md transition-transform hover:scale-110"
+            className="absolute right-2.5 top-2.5 z-[2] flex h-8 w-8 items-center justify-center rounded-full bg-cream-card shadow-md transition-transform hover:scale-110"
             style={{ color: wish ? "#e74c3c" : "#999" }}
             aria-label="Toggle wishlist"
           >
@@ -77,7 +77,7 @@ export function ProductCard({ product }: { product: Product }) {
               {product.colors.map((c) => (
                 <div
                   key={c}
-                  className="bg-white/[0.92] px-1.5 py-0.5 text-[0.5rem] font-semibold text-[#333]"
+                  className="bg-[#fbf7ee]/[0.92] px-1.5 py-0.5 text-[0.5rem] font-semibold text-[#333]"
                 >
                   {c.split(" / ")[0]}
                 </div>

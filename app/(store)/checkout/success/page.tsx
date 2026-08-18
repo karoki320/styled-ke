@@ -44,7 +44,7 @@ export default function CheckoutSuccessPage({
         {STEPS.map(([Icon, title, sub], i) => (
           <div
             key={title}
-            className="mb-1.5 flex items-center gap-2.5 bg-bg-light p-3 text-left"
+            className="mb-1.5 flex items-center gap-2.5 bg-cream-card p-3 text-left"
           >
             <Icon size={17} className="flex-shrink-0 text-[#555]" />
             <div>

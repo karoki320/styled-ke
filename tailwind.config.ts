@@ -18,6 +18,10 @@ const config: Config = {
         ink: "#1a1a1a",
         white: "#ffffff",
         "bg-light": "#f8f8f6",
+        cream: {
+          DEFAULT: "#f2ead9",
+          card: "#fbf7ee",
+        },
         gold: {
           DEFAULT: "#c9a96e",
           hover: "#b8935a",

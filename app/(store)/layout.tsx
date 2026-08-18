@@ -8,7 +8,7 @@ import { ToastStack } from "@/components/ui/ToastStack";
 
 export default function StoreLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="paper-canvas min-h-screen">
       <AnnouncementBar />
       <NavBar />
       {children}

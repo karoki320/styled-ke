@@ -275,7 +275,7 @@ export function Checkout() {
                               <option key={c}>{c}</option>
                             ))}
                           </select>
-                          <div className="flex items-start gap-1.5 bg-bg-light p-2.5 text-[0.71rem] text-[#555]">
+                          <div className="flex items-start gap-1.5 bg-cream-card p-2.5 text-[0.71rem] text-[#555]">
                             <Mail size={14} className="mt-0.5 flex-shrink-0" />
                             <span>
                               We don&apos;t call before delivery — your receipt is emailed the
@@ -359,7 +359,7 @@ export function Checkout() {
                 </div>
               ))}
               {form.payment === "mpesa" && (
-                <div className="mb-3.5 border border-border bg-bg-light p-3.5 text-[0.74rem] leading-loose">
+                <div className="mb-3.5 border border-border bg-cream-card p-3.5 text-[0.74rem] leading-loose">
                   <strong className="text-gold">M-Pesa Steps:</strong>
                   <br />
                   1. M-Pesa → Lipa na M-Pesa → Paybill
@@ -410,7 +410,7 @@ export function Checkout() {
                   </div>
                 ))}
               </div>
-              <div className="mb-4 flex items-center justify-between border border-border bg-bg-light p-3.5">
+              <div className="mb-4 flex items-center justify-between border border-border bg-cream-card p-3.5">
                 <span className="pf font-bold">Total</span>
                 <span className="pf text-[1.1rem] font-black text-gold">{fmtKES(total)}</span>
               </div>

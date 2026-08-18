@@ -23,7 +23,7 @@ export function CartDrawer() {
       />
       <div
         className={cn(
-          "fixed right-0 top-0 z-[500] flex h-screen w-full max-w-[400px] translate-x-full flex-col border-l border-border bg-white shadow-[-6px_0_36px_rgba(0,0,0,0.06)] transition-transform duration-[360ms] ease-out",
+          "fixed right-0 top-0 z-[500] flex h-screen w-full max-w-[400px] translate-x-full flex-col border-l border-border bg-cream-card shadow-[-6px_0_36px_rgba(0,0,0,0.06)] transition-transform duration-[360ms] ease-out",
           isOpen && "translate-x-0"
         )}
       >

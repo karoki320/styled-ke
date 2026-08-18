@@ -50,7 +50,7 @@ export function NavBar() {
   }, [mobileOpen]);
 
   return (
-    <nav className="sticky top-0 z-[200] border-b border-border bg-white">
+    <nav className="sticky top-0 z-[200] border-b border-border bg-cream-card">
       <div className="mx-auto flex h-16 max-w-[1400px] items-center justify-between px-4 sm:px-6 lg:h-[66px] lg:px-10">
         <LogoMark size={38} />
 
@@ -70,7 +70,7 @@ export function NavBar() {
                 {name} <span className="text-[0.5rem]">▾</span>
               </NavBtn>
               {open === name && (
-                <div className="animate-dropIn absolute left-1/2 top-full z-[300] min-w-[185px] -translate-x-1/2 border border-border bg-white shadow-[0_8px_28px_rgba(0,0,0,0.09)]">
+                <div className="animate-dropIn absolute left-1/2 top-full z-[300] min-w-[185px] -translate-x-1/2 border border-border bg-cream-card shadow-[0_8px_28px_rgba(0,0,0,0.09)]">
                   {MENUS[name].map((item) => (
                     <Link
                       key={item.label}
@@ -154,7 +154,7 @@ export function NavBar() {
 
       {/* Mobile menu panel (below lg) */}
       {mobileOpen && (
-        <div className="max-h-[calc(100vh-64px)] overflow-y-auto border-t border-border bg-white lg:hidden">
+        <div className="max-h-[calc(100vh-64px)] overflow-y-auto border-t border-border bg-cream-card lg:hidden">
           <Link
             href="/"
             className="block px-5 py-4 text-[0.85rem] font-bold uppercase tracking-wide text-black"
@@ -178,7 +178,7 @@ export function NavBar() {
           </Link>
           <Link
             href="/admin"
-            className="block border-t border-border bg-bg-light px-5 py-4 text-[0.85rem] font-bold uppercase tracking-wide text-gold"
+            className="block border-t border-border bg-cream px-5 py-4 text-[0.85rem] font-bold uppercase tracking-wide text-gold"
           >
             Sign In
           </Link>

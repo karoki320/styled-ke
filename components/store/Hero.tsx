@@ -137,7 +137,7 @@ export function Hero() {
         <Link
           href={slide?.cta_href || "/shop"}
           onClick={(e) => e.stopPropagation()}
-          className="pointer-events-auto bg-white px-9 py-3.5 text-[0.72rem] font-bold uppercase tracking-[0.15em] text-black transition-all hover:scale-105 hover:bg-gold hover:text-white sm:px-12 sm:py-4 sm:text-[0.78rem]"
+          className="pointer-events-auto bg-cream-card px-9 py-3.5 text-[0.72rem] font-bold uppercase tracking-[0.15em] text-black transition-all hover:scale-105 hover:bg-gold hover:text-white sm:px-12 sm:py-4 sm:text-[0.78rem]"
         >
           {slide?.cta_label || "SHOP NOW"}
         </Link>
