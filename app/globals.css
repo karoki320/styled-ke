@@ -192,3 +192,34 @@ a {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-repeat: repeat;
 }
+
+/* ─────────────────────────────────────────────────────────────────
+   Product photo grade — our real product shots come from several
+   different sessions (different backdrops: store counter, green
+   screen, plain wall) so they clash side-by-side in a grid. This
+   applies one restrained warm color grade across every product photo
+   so they read as one coherent, editorial catalogue rather than a
+   patchwork of snapshots — a "quiet luxury" treatment: no filters,
+   just a touch less saturation/contrast and a hint of warmth.
+   ───────────────────────────────────────────────────────────────── */
+.photo-grade {
+  filter: saturate(0.92) contrast(1.03) brightness(1.015) sepia(0.035);
+}
+
+/* Soft side vignette — sits above the photo, below badges/buttons.
+   Our shots are full-height portraits, so the mismatched backdrop
+   (store shelving, green-screen sheet) shows up as strips down the
+   left/right edges rather than the corners. Fading those edges
+   towards the card's own cream tone — rather than just darkening
+   them — reads as the photo melting into the page instead of a
+   flat vignette, and neutralizes the clashing backdrop hue instead
+   of just dimming it. The garment itself is untouched. */
+.photo-vignette {
+  background: linear-gradient(
+    to right,
+    rgba(251, 247, 238, 0.7) 0%,
+    transparent 26%,
+    transparent 74%,
+    rgba(251, 247, 238, 0.7) 100%
+  );
+}

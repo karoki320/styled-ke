@@ -48,8 +48,9 @@ export function ProductCard({ product }: { product: Product }) {
             alt={product.name}
             fill
             sizes="(min-width: 1024px) 25vw, 50vw"
-            className="object-cover object-top transition-transform duration-500 ease-out group-hover:scale-105"
+            className="photo-grade object-cover object-top transition-transform duration-500 ease-out group-hover:scale-105"
           />
+          <div className="photo-vignette pointer-events-none absolute inset-0 z-[1]" />
           {product.badge === "NEW" && (
             <span className="absolute left-2.5 top-2.5 z-[2] bg-black px-2.5 py-1 text-[0.56rem] font-bold uppercase tracking-wide text-white">
               New

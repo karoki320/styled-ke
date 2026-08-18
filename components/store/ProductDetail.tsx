@@ -20,9 +20,13 @@ export function ProductDetail({ product, related }: { product: Product; related:
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
   const [activeImg, setActiveImg] = useState(product.image);
+  const [activeColor, setActiveColor] = useState(product.colors?.[0] ?? null);
   const addItem = useCartStore((s) => s.addItem);
 
-  useEffect(() => setActiveImg(product.image), [product.id]);
+  useEffect(() => {
+    setActiveImg(product.image);
+    setActiveColor(product.colors?.[0] ?? null);
+  }, [product.id]);
 
   const discount = product.compare_price
     ? Math.round((1 - product.price / product.compare_price) * 100)
@@ -51,15 +55,16 @@ export function ProductDetail({ product, related }: { product: Product; related:
               alt={product.name}
               fill
               sizes="(min-width: 1024px) 50vw, 100vw"
-              className="object-cover object-top"
+              className="photo-grade object-cover object-top"
             />
+            <div className="photo-vignette pointer-events-none absolute inset-0 z-[1]" />
             {product.badge === "NEW" && (
-              <span className="absolute left-4 top-4 bg-black px-2.5 py-1 text-[0.56rem] font-bold uppercase tracking-wide text-white">
+              <span className="absolute left-4 top-4 z-[2] bg-black px-2.5 py-1 text-[0.56rem] font-bold uppercase tracking-wide text-white">
                 New
               </span>
             )}
             {product.badge === "SALE" && discount && (
-              <span className="absolute left-4 top-4 bg-gold px-2.5 py-1 text-[0.56rem] font-bold uppercase tracking-wide text-white">
+              <span className="absolute left-4 top-4 z-[2] bg-gold px-2.5 py-1 text-[0.56rem] font-bold uppercase tracking-wide text-white">
                 -{discount}%
               </span>
             )}
@@ -75,7 +80,7 @@ export function ProductDetail({ product, related }: { product: Product; related:
                     border: `2px solid ${activeImg === img ? "#1a1a1a" : "transparent"}`,
                   }}
                 >
-                  <Image src={img} alt="" fill sizes="68px" className="object-cover object-top" />
+                  <Image src={img} alt="" fill sizes="68px" className="photo-grade object-cover object-top" />
                 </button>
               ))}
             </div>
@@ -112,17 +117,27 @@ export function ProductDetail({ product, related }: { product: Product; related:
           {product.colors && product.colors.length > 1 && (
             <div className="mb-4.5">
               <div className="mb-2 text-[0.62rem] font-bold uppercase tracking-wide text-[#888]">
-                Available Colours
+                Colour: <span className="text-black">{activeColor}</span>
               </div>
               <div className="flex gap-2">
-                {product.colors.map((c) => (
-                  <div
-                    key={c}
-                    className="cursor-pointer border border-border px-3.5 py-1.5 text-[0.7rem] font-semibold transition-colors hover:border-black"
-                  >
-                    {c}
-                  </div>
-                ))}
+                {product.colors.map((c) => {
+                  const active = c === activeColor;
+                  return (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setActiveColor(c)}
+                      aria-pressed={active}
+                      className={`cursor-pointer border px-3.5 py-1.5 text-[0.7rem] font-semibold transition-colors ${
+                        active
+                          ? "border-black bg-black text-white"
+                          : "border-border bg-transparent text-black hover:border-black"
+                      }`}
+                    >
+                      {c}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
