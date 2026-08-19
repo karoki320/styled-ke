@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { fmtKES, slugify } from "@/lib/utils";
+import { processImageForUpload } from "@/lib/image-upload";
 
 type AdminProduct = {
   id: string;
@@ -48,10 +49,13 @@ export default function AdminProductsPage() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState<Draft>(emptyDraft);
+  const [processing, setProcessing] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [clothingCategoryId, setClothingCategoryId] = useState<string | null>(null);
+  const previewUrlRef = useRef<string | null>(null);
 
   async function load() {
     setLoading(true);
@@ -114,7 +118,15 @@ export default function AdminProductsPage() {
 
   const filtered = products.filter((p) => !search || p.name.toLowerCase().includes(search.toLowerCase()));
 
+  function discardPreview() {
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current);
+      previewUrlRef.current = null;
+    }
+  }
+
   const openNew = () => {
+    discardPreview();
     setEditing(null);
     setDraft(emptyDraft);
     setError(null);
@@ -122,6 +134,7 @@ export default function AdminProductsPage() {
   };
 
   const openEdit = (p: AdminProduct) => {
+    discardPreview();
     setEditing(p.id);
     setDraft({ ...p });
     setError(null);
@@ -129,22 +142,50 @@ export default function AdminProductsPage() {
   };
 
   async function handleUpload(file: File) {
-    setUploading(true);
+    if (!file.type.startsWith("image/") && !/\.(heic|heif)$/i.test(file.name)) {
+      setError("That doesn't look like a photo — please choose an image file.");
+      return;
+    }
     setError(null);
+
+    // 1. Process right here in the browser — decodes the photo (including
+    // iPhone HEIC shots, which most non-Apple devices can't open later),
+    // resizes it, and re-encodes as JPEG — then show it immediately so the
+    // admin isn't staring at a blank box while the network upload happens.
+    setProcessing(true);
+    let processed;
+    try {
+      processed = await processImageForUpload(file);
+    } catch (err) {
+      console.error("Failed to process image:", err);
+      setError(err instanceof Error ? err.message : "Couldn't read this photo — try a different one.");
+      setProcessing(false);
+      return;
+    }
+    setProcessing(false);
+
+    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+    previewUrlRef.current = processed.previewUrl;
+    setDraft((d) => ({ ...d, image: processed.previewUrl }));
+
+    // 2. Upload the already-resized JPEG in the background.
+    setUploading(true);
     try {
       const supabase = createClient();
-      const ext = file.name.split(".").pop() || "jpg";
-      const path = `product-${Date.now()}.${ext}`;
-      const { error: uploadErr } = await supabase.storage.from("product-images").upload(path, file, {
+      const path = `product-${processed.filename}`;
+      const { error: uploadErr } = await supabase.storage.from("product-images").upload(path, processed.blob, {
         cacheControl: "3600",
         upsert: false,
+        contentType: "image/jpeg",
       });
       if (uploadErr) throw uploadErr;
       const { data: pub } = supabase.storage.from("product-images").getPublicUrl(path);
-      setDraft((d) => ({ ...d, image: pub.publicUrl }));
+      setDraft((d) => (d.image === processed.previewUrl ? { ...d, image: pub.publicUrl } : d));
+      URL.revokeObjectURL(processed.previewUrl);
+      if (previewUrlRef.current === processed.previewUrl) previewUrlRef.current = null;
     } catch (err) {
       console.error("Image upload failed:", err);
-      setError(err instanceof Error ? err.message : "Image upload failed.");
+      setError(err instanceof Error ? err.message : "Upload failed — check your connection and try again.");
     } finally {
       setUploading(false);
     }
@@ -157,6 +198,10 @@ export default function AdminProductsPage() {
     }
     if (!draft.image) {
       setError("Please upload a product photo.");
+      return;
+    }
+    if (draft.image.startsWith("blob:")) {
+      setError("Still saving your photo — give it a second and try again.");
       return;
     }
     setSaving(true);
@@ -474,22 +519,65 @@ export default function AdminProductsPage() {
                 <label className="mb-1.5 block text-[0.6rem] font-bold uppercase tracking-wide text-[#888]">
                   Product Photo
                 </label>
-                {draft.image && (
-                  <div className="relative mb-2 h-40 w-32 overflow-hidden bg-[#f5f5f5]">
-                    <Image src={draft.image} alt="" fill sizes="130px" className="object-cover object-top" />
-                  </div>
-                )}
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="field"
-                  disabled={uploading}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
+                <label
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setDragOver(true);
+                  }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setDragOver(false);
+                    const file = e.dataTransfer.files?.[0];
                     if (file) handleUpload(file);
                   }}
-                />
-                {uploading && <p className="mt-1 text-[0.68rem] text-gray-400">Uploading…</p>}
+                  className="flex cursor-pointer flex-col items-center gap-2.5 border-2 border-dashed p-4 text-center transition-colors sm:flex-row sm:text-left"
+                  style={{ borderColor: dragOver ? "#1a1a1a" : "#ddd", background: dragOver ? "#fafafa" : "transparent" }}
+                >
+                  <div className="relative h-32 w-24 flex-shrink-0 overflow-hidden bg-[#f5f5f5]">
+                    {draft.image ? (
+                      draft.image.startsWith("blob:") ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={draft.image} alt="" className="h-full w-full object-cover object-top" />
+                      ) : (
+                        <Image src={draft.image} alt="" fill sizes="96px" className="object-cover object-top" />
+                      )
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-[0.6rem] text-gray-300">
+                        No photo
+                      </div>
+                    )}
+                    {(processing || uploading) && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-[0.55rem] font-bold uppercase tracking-wide text-white">
+                        {processing ? "Reading…" : "Saving…"}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 text-[0.72rem] text-gray-400">
+                    <span className="font-semibold text-black">
+                      {draft.image ? "Tap to replace photo" : "Tap to take or choose a photo"}
+                    </span>
+                    <br />
+                    or drag one in here — works from your camera, gallery, or files, on any phone or
+                    computer.
+                    {processing && <div className="mt-1 font-semibold text-black">Reading photo…</div>}
+                    {uploading && <div className="mt-1 font-semibold text-black">Saving to your catalogue…</div>}
+                    {!processing && !uploading && draft.image && !draft.image.startsWith("blob:") && (
+                      <div className="mt-1 font-semibold text-success">✓ Saved</div>
+                    )}
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={processing || uploading}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleUpload(file);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
               </div>
 
               <label className="flex items-center gap-2 text-[0.78rem]">
@@ -513,7 +601,7 @@ export default function AdminProductsPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={saving || uploading}
+                  disabled={saving || uploading || processing}
                   className="btn-blk flex-[2] justify-center py-3 text-[0.7rem] disabled:opacity-50"
                 >
                   {saving ? "SAVING…" : "✓ SAVE PRODUCT"}

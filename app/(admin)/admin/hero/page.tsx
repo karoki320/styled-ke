@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
+import { processImageForUpload } from "@/lib/image-upload";
 import type { HeroSlide } from "@/components/store/Hero";
 
 type DraftSlide = {
@@ -35,9 +36,12 @@ export default function AdminHeroPage() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState<DraftSlide>(emptyDraft);
+  const [processing, setProcessing] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const previewUrlRef = useRef<string | null>(null);
 
   async function load() {
     setLoading(true);
@@ -64,6 +68,7 @@ export default function AdminHeroPage() {
   }, []);
 
   const openNew = () => {
+    discardPreview();
     setEditing(null);
     setDraft({ ...emptyDraft, sort_order: slides.length + 1 });
     setError(null);
@@ -71,6 +76,7 @@ export default function AdminHeroPage() {
   };
 
   const openEdit = (s: (typeof slides)[number]) => {
+    discardPreview();
     setEditing(s.id);
     setDraft({
       id: s.id,
@@ -87,23 +93,52 @@ export default function AdminHeroPage() {
     setShowForm(true);
   };
 
+  function discardPreview() {
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current);
+      previewUrlRef.current = null;
+    }
+  }
+
   async function handleUpload(file: File) {
-    setUploading(true);
     setError(null);
+
+    // 1. Process right here in the browser (handles iPhone HEIC photos,
+    // resizes, re-encodes to JPEG) and show it immediately.
+    setProcessing(true);
+    let processed;
+    try {
+      processed = await processImageForUpload(file);
+    } catch (err) {
+      console.error("Failed to process image:", err);
+      setError(err instanceof Error ? err.message : "Couldn't read this photo — try a different one.");
+      setProcessing(false);
+      return;
+    }
+    setProcessing(false);
+
+    discardPreview();
+    previewUrlRef.current = processed.previewUrl;
+    setDraft((d) => ({ ...d, image_url: processed.previewUrl }));
+
+    // 2. Upload the already-resized JPEG in the background.
+    setUploading(true);
     try {
       const supabase = createClient();
-      const ext = file.name.split(".").pop() || "png";
-      const path = `slide-${Date.now()}.${ext}`;
-      const { error: uploadErr } = await supabase.storage.from("hero-images").upload(path, file, {
+      const path = `slide-${processed.filename}`;
+      const { error: uploadErr } = await supabase.storage.from("hero-images").upload(path, processed.blob, {
         cacheControl: "3600",
         upsert: false,
+        contentType: "image/jpeg",
       });
       if (uploadErr) throw uploadErr;
       const { data: pub } = supabase.storage.from("hero-images").getPublicUrl(path);
-      setDraft((d) => ({ ...d, image_url: pub.publicUrl }));
+      setDraft((d) => (d.image_url === processed.previewUrl ? { ...d, image_url: pub.publicUrl } : d));
+      URL.revokeObjectURL(processed.previewUrl);
+      if (previewUrlRef.current === processed.previewUrl) previewUrlRef.current = null;
     } catch (err) {
       console.error("Image upload failed:", err);
-      setError(err instanceof Error ? err.message : "Image upload failed.");
+      setError(err instanceof Error ? err.message : "Upload failed — check your connection and try again.");
     } finally {
       setUploading(false);
     }
@@ -112,6 +147,10 @@ export default function AdminHeroPage() {
   async function handleSave() {
     if (!draft.image_url) {
       setError("Please upload an image for this slide.");
+      return;
+    }
+    if (draft.image_url.startsWith("blob:")) {
+      setError("Still saving your photo — give it a second and try again.");
       return;
     }
     setSaving(true);
@@ -300,22 +339,60 @@ export default function AdminHeroPage() {
                 <label className="mb-1.5 block text-[0.6rem] font-bold uppercase tracking-wide text-[#888]">
                   Slide Image
                 </label>
-                {draft.image_url && (
-                  <div className="relative mb-2 h-32 w-full overflow-hidden bg-[#f5f5f5]">
-                    <Image src={draft.image_url} alt="" fill sizes="500px" className="object-cover object-top" />
-                  </div>
-                )}
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="field"
-                  disabled={uploading}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
+                <label
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setDragOver(true);
+                  }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setDragOver(false);
+                    const file = e.dataTransfer.files?.[0];
                     if (file) handleUpload(file);
                   }}
-                />
-                {uploading && <p className="mt-1 text-[0.68rem] text-gray-400">Uploading…</p>}
+                  className="flex cursor-pointer flex-col items-center gap-2.5 border-2 border-dashed p-4 text-center transition-colors"
+                  style={{ borderColor: dragOver ? "#1a1a1a" : "#ddd", background: dragOver ? "#fafafa" : "transparent" }}
+                >
+                  <div className="relative h-32 w-full overflow-hidden bg-[#f5f5f5]">
+                    {draft.image_url ? (
+                      draft.image_url.startsWith("blob:") ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={draft.image_url} alt="" className="h-full w-full object-cover object-top" />
+                      ) : (
+                        <Image src={draft.image_url} alt="" fill sizes="500px" className="object-cover object-top" />
+                      )
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-[0.6rem] text-gray-300">
+                        No image
+                      </div>
+                    )}
+                    {(processing || uploading) && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-[0.55rem] font-bold uppercase tracking-wide text-white">
+                        {processing ? "Reading…" : "Saving…"}
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-[0.72rem] text-gray-400">
+                    <span className="font-semibold text-black">
+                      {draft.image_url ? "Tap to replace image" : "Tap to take or choose a photo"}
+                    </span>{" "}
+                    or drag one in — works from your camera, gallery, or files, on any phone or computer.
+                    {processing && <div className="mt-1 font-semibold text-black">Reading photo…</div>}
+                    {uploading && <div className="mt-1 font-semibold text-black">Saving to your homepage…</div>}
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={processing || uploading}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleUpload(file);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
               </div>
 
               {draft.image_url && (
@@ -354,14 +431,24 @@ export default function AdminHeroPage() {
                       className="flex-1"
                     />
                     <div className="relative h-20 w-11 flex-shrink-0 overflow-hidden border border-border bg-[#f5f5f5]">
-                      <Image
-                        src={draft.image_url}
-                        alt=""
-                        fill
-                        sizes="44px"
-                        className="object-cover"
-                        style={{ objectPosition: `${draft.focal_x}% center` }}
-                      />
+                      {draft.image_url.startsWith("blob:") ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={draft.image_url}
+                          alt=""
+                          className="h-full w-full object-cover"
+                          style={{ objectPosition: `${draft.focal_x}% center` }}
+                        />
+                      ) : (
+                        <Image
+                          src={draft.image_url}
+                          alt=""
+                          fill
+                          sizes="44px"
+                          className="object-cover"
+                          style={{ objectPosition: `${draft.focal_x}% center` }}
+                        />
+                      )}
                     </div>
                   </div>
                   <p className="mt-1 text-[0.65rem] text-gray-400">
@@ -436,7 +523,7 @@ export default function AdminHeroPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={saving || uploading}
+                  disabled={saving || uploading || processing}
                   className="btn-blk flex-[2] justify-center py-3 text-[0.7rem] disabled:opacity-50"
                 >
                   {saving ? "SAVING…" : "✓ SAVE SLIDE"}
