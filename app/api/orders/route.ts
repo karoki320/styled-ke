@@ -128,7 +128,18 @@ export async function POST(req: NextRequest) {
       }).catch(() => {
         // Non-fatal — WhatsApp isn't configured yet or the send failed.
       });
-      sendReceipt(order.order_number);
+      // Only manual M-Pesa Paybill has no automated payment signal — the
+      // customer pays outside the app and nothing calls back to confirm it,
+      // so order placement IS the confirmation there (matches the checkout
+      // copy: "your receipt is emailed the moment you order"). Paystack
+      // (card / instant M-Pesa) orders get their receipt from
+      // markOrderPaidAndNotify() once payment is actually confirmed — see
+      // app/api/paystack/webhook and /verify. Emailing a "here's your
+      // receipt" here, before the customer has even reached Paystack's
+      // payment page, would confirm an order nobody has paid for yet.
+      if (body.paymentMethod === "mpesa") {
+        sendReceipt(order.order_number);
+      }
 
       return NextResponse.json({ id: order.id, orderNumber: order.order_number });
     } catch (err) {

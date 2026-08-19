@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   description:
     "Nairobi's premium boutique for fashion. All clothing KES 1,500. Authentic, exclusive fashion — nationwide delivery.",
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL || "https://styled.ke"
+    process.env.NEXT_PUBLIC_APP_URL || "https://styledke.com"
   ),
   openGraph: {
     title: "Styled.ke – Your Style, Elevated.",
