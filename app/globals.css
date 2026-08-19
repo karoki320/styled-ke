@@ -223,3 +223,32 @@ a {
     rgba(251, 247, 238, 0.7) 100%
   );
 }
+
+/* ─────────────────────────────────────────────────────────────────
+   POS receipt printing (browser print-dialog fallback). The till
+   page has a normal admin dashboard around it, so a bare
+   window.print() would print the whole page. Instead we hide
+   everything except the narrow `.receipt-print` slip that's built
+   in the ReceiptModal component, matching the paper width the
+   admin picked (58mm / 80mm).
+   ───────────────────────────────────────────────────────────────── */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .receipt-print,
+  .receipt-print *:not(style):not(script) {
+    visibility: visible;
+    display: block !important;
+  }
+  .receipt-print {
+    position: fixed;
+    top: 0;
+    left: 0;
+    margin: 0;
+    padding: 3mm;
+  }
+  @page {
+    margin: 0;
+  }
+}

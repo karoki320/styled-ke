@@ -1,12 +1,23 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { Receipt, Banknote, Smartphone, CreditCard, FileText, CircleCheck, Printer, type LucideIcon } from "lucide-react";
+import { Receipt, Banknote, Smartphone, CreditCard, FileText, CircleCheck, Printer, Bluetooth, BluetoothConnected, type LucideIcon } from "lucide-react";
 import { PRODUCTS } from "@/lib/mock-data";
 import { fmtKES } from "@/lib/utils";
-import { usePOSStore, type POSPaymentMethod } from "@/store/pos";
+import { usePOSStore, type POSPaymentMethod, type POSLineItem } from "@/store/pos";
 import type { Product } from "@/types";
+import {
+  isBluetoothSupported,
+  tryAutoReconnect,
+  connectPrinter,
+  getConnectedPrinterName,
+  printReceiptViaBluetooth,
+  buildReceiptLines,
+  getPaperWidth,
+  setPaperWidth,
+  type ReceiptData,
+} from "@/lib/pos-printer";
 
 const CATEGORY_TABS: ("All" | Product["category"])[] = ["All", "Clothing"];
 
@@ -55,7 +66,32 @@ function POSWorkspace() {
   const [category, setCategory] = useState<"All" | Product["category"]>("All");
   const [search, setSearch] = useState("");
   const [payment, setPayment] = useState<POSPaymentMethod | null>(null);
-  const [receipt, setReceipt] = useState<{ orderNo: string; method: POSPaymentMethod; amountReceived?: number } | null>(null);
+  const [receipt, setReceipt] = useState<ReceiptData | null>(null);
+  const [printerName, setPrinterName] = useState<string | null>(null);
+  const [connecting, setConnecting] = useState(false);
+
+  useEffect(() => {
+    setPrinterName(getConnectedPrinterName());
+    if (isBluetoothSupported()) {
+      tryAutoReconnect().then((name) => {
+        if (name) setPrinterName(name);
+      });
+    }
+  }, []);
+
+  const handleConnectPrinter = async () => {
+    setConnecting(true);
+    try {
+      const name = await connectPrinter();
+      setPrinterName(name);
+    } catch (err) {
+      if (err instanceof Error && !/cancelled|user gesture/i.test(err.message)) {
+        alert(err.message);
+      }
+    } finally {
+      setConnecting(false);
+    }
+  };
 
   const {
     sale,
@@ -87,8 +123,29 @@ function POSWorkspace() {
 
   const finalizeSale = (method: POSPaymentMethod, amountReceived?: number) => {
     const orderNo = `#SK-${Math.floor(Math.random() * 9000) + 1000}`;
-    recordPayment(method, total());
-    setReceipt({ orderNo, method, amountReceived });
+    const saleSubtotal = subtotal();
+    const saleTotal = total();
+    // Snapshot the sale before clearSale() wipes it — the receipt needs the
+    // actual line items, not just the order number.
+    const items = sale.map((i: POSLineItem) => ({
+      name: i.name,
+      qty: i.qty,
+      price: i.price,
+      lineTotal: i.price * i.qty,
+    }));
+    recordPayment(method, saleTotal);
+    setReceipt({
+      orderNo,
+      dateTime: new Date().toLocaleString("en-KE", { dateStyle: "medium", timeStyle: "short" }),
+      items,
+      subtotal: saleSubtotal,
+      discount,
+      total: saleTotal,
+      method,
+      amountReceived,
+      change: amountReceived !== undefined ? Math.max(0, amountReceived - saleTotal) : undefined,
+      customerPhone: customer?.phone || null,
+    });
     clearSale();
     setPayment(null);
   };
@@ -114,8 +171,20 @@ function POSWorkspace() {
               </button>
             ))}
           </div>
-          <div className="text-[0.68rem] text-gray-400">
-            Session opened {new Date(session.openedAt!).toLocaleTimeString()}
+          <div className="flex items-center gap-3">
+            <div className="text-[0.68rem] text-gray-400">
+              Session opened {new Date(session.openedAt!).toLocaleTimeString()}
+            </div>
+            <button
+              onClick={printerName ? undefined : handleConnectPrinter}
+              disabled={connecting || !!printerName}
+              title={printerName ? `Connected to ${printerName}` : "Connect a Bluetooth receipt printer"}
+              className="flex items-center gap-1 border border-border px-2 py-1 text-[0.62rem] font-semibold uppercase tracking-wide disabled:cursor-default"
+              style={{ color: printerName ? "#27ae60" : "#888" }}
+            >
+              {printerName ? <BluetoothConnected size={12} /> : <Bluetooth size={12} />}
+              {connecting ? "Connecting…" : printerName ? "Printer Ready" : "Connect Printer"}
+            </button>
           </div>
         </div>
         <input
@@ -362,35 +431,126 @@ function ReceiptModal({
   receipt,
   onClose,
 }: {
-  receipt: { orderNo: string; method: POSPaymentMethod; amountReceived?: number };
+  receipt: ReceiptData;
   onClose: () => void;
 }) {
+  const [printing, setPrinting] = useState(false);
+  const [printError, setPrintError] = useState<string | null>(null);
+  const [paperWidth, setWidth] = useState<58 | 80>(58);
+
+  useEffect(() => {
+    setWidth(getPaperWidth());
+  }, []);
+
+  const changeWidth = (w: 58 | 80) => {
+    setWidth(w);
+    setPaperWidth(w);
+  };
+
+  const handlePrint = async () => {
+    setPrintError(null);
+    // If we have a live Bluetooth connection, print silently and directly —
+    // no dialog, no dead trees on a failed COM-port setup.
+    if (getConnectedPrinterName()) {
+      setPrinting(true);
+      try {
+        await printReceiptViaBluetooth(receipt);
+      } catch (err) {
+        setPrintError(err instanceof Error ? err.message : "Bluetooth print failed. Using the print dialog instead.");
+        window.print();
+      } finally {
+        setPrinting(false);
+      }
+      return;
+    }
+    // Otherwise: the reliable path — open the browser print dialog with the
+    // narrow receipt layout. Works with any printer Windows can already
+    // see, including a Bluetooth printer added as a normal Windows printer.
+    window.print();
+  };
+
+  const lines = buildReceiptLines(receipt, paperWidth === 80 ? 42 : 32);
+
   return (
-    <div className="fixed inset-0 z-[600] flex items-center justify-center bg-black/45 p-5" onClick={onClose}>
+    <>
+    <div className="fixed inset-0 z-[600] flex items-center justify-center bg-black/45 p-5 print:hidden" onClick={onClose}>
       <div className="w-full max-w-xs bg-white p-6 text-center" onClick={(e) => e.stopPropagation()}>
         <CircleCheck size={34} className="mx-auto mb-2 text-success" />
         <div className="pf mb-1 text-lg font-bold">Sale Complete</div>
         <div className="mb-4 text-sm font-semibold text-gold">{receipt.orderNo}</div>
-        <div className="mb-5 border-t border-dashed border-border pt-4 text-left text-sm">
-          <div className="mb-1 flex justify-between">
-            <span className="text-gray-400">Payment</span>
-            <span className="font-semibold uppercase">{receipt.method}</span>
-          </div>
-          {receipt.amountReceived !== undefined && (
-            <div className="flex justify-between">
-              <span className="text-gray-400">Received</span>
-              <span>{fmtKES(receipt.amountReceived)}</span>
+        <div className="mb-5 max-h-[35vh] overflow-y-auto border-t border-dashed border-border pt-4 text-left text-sm">
+          {receipt.items.map((item, i) => (
+            <div key={i} className="mb-1 flex justify-between gap-2">
+              <span className="text-gray-500">
+                {item.qty}× {item.name}
+              </span>
+              <span className="whitespace-nowrap font-medium">{fmtKES(item.lineTotal)}</span>
             </div>
-          )}
+          ))}
+          <div className="my-2 border-t border-border pt-2">
+            {receipt.discount > 0 && (
+              <div className="mb-1 flex justify-between text-gray-400">
+                <span>Discount</span>
+                <span>-{fmtKES(receipt.discount)}</span>
+              </div>
+            )}
+            <div className="flex justify-between">
+              <span className="font-semibold">Total</span>
+              <span className="pf font-bold text-gold">{fmtKES(receipt.total)}</span>
+            </div>
+            <div className="mt-1 flex justify-between text-gray-400">
+              <span>Payment</span>
+              <span className="font-semibold uppercase">{receipt.method}</span>
+            </div>
+            {receipt.amountReceived !== undefined && (
+              <>
+                <div className="flex justify-between text-gray-400">
+                  <span>Received</span>
+                  <span>{fmtKES(receipt.amountReceived)}</span>
+                </div>
+                <div className="flex justify-between text-gray-400">
+                  <span>Change</span>
+                  <span>{fmtKES(receipt.change ?? 0)}</span>
+                </div>
+              </>
+            )}
+          </div>
           <div className="mt-3 text-center text-[0.7rem] text-gray-400">
-            Thank you for shopping at Styled.ke! 💛
+            Thank you for shopping at Styled.ke!
             <br />
             WhatsApp: 0734 807 511
           </div>
         </div>
+
+        {printError && (
+          <p className="mb-3 text-left text-[0.65rem] text-danger">{printError}</p>
+        )}
+
+        <div className="mb-3 flex items-center justify-center gap-2 text-[0.6rem] text-gray-400">
+          <span>Paper:</span>
+          <button
+            onClick={() => changeWidth(58)}
+            className="border px-2 py-0.5 font-semibold"
+            style={{ borderColor: paperWidth === 58 ? "#1a1a1a" : "#e8e8e8", color: paperWidth === 58 ? "#1a1a1a" : "#aaa" }}
+          >
+            58mm
+          </button>
+          <button
+            onClick={() => changeWidth(80)}
+            className="border px-2 py-0.5 font-semibold"
+            style={{ borderColor: paperWidth === 80 ? "#1a1a1a" : "#e8e8e8", color: paperWidth === 80 ? "#1a1a1a" : "#aaa" }}
+          >
+            80mm
+          </button>
+        </div>
+
         <div className="flex flex-col gap-2">
-          <button onClick={() => window.print()} className="btn-out w-full justify-center gap-1.5 py-2.5 text-[0.68rem]">
-            <Printer size={13} /> PRINT RECEIPT
+          <button
+            onClick={handlePrint}
+            disabled={printing}
+            className="btn-out w-full justify-center gap-1.5 py-2.5 text-[0.68rem] disabled:opacity-50"
+          >
+            <Printer size={13} /> {printing ? "PRINTING…" : "PRINT RECEIPT"}
           </button>
           <button onClick={onClose} className="btn-blk w-full justify-center py-2.5 text-[0.68rem]">
             NEW SALE
@@ -398,5 +558,20 @@ function ReceiptModal({
         </div>
       </div>
     </div>
+
+    {/* Printable slip — sits OUTSIDE the modal's print:hidden wrapper on
+        purpose: an ancestor's `display: none` always wins over any display
+        value the child sets in @media print, so this can't live inside the
+        modal above. Hidden on screen, shown only by the @media print rule
+        in globals.css when the browser print dialog opens (the fallback /
+        non-Bluetooth path). Kept in sync with the Bluetooth print via
+        buildReceiptLines() so both paths always show the same content. */}
+    <style>{`@page { size: ${paperWidth}mm auto; margin: 0; }`}</style>
+    <div className="receipt-print hidden" style={{ width: paperWidth === 80 ? "80mm" : "58mm" }}>
+      <pre style={{ fontFamily: "monospace", fontSize: "9.5px", lineHeight: 1.35, whiteSpace: "pre", margin: 0 }}>
+        {lines.join("\n")}
+      </pre>
+    </div>
+    </>
   );
 }
