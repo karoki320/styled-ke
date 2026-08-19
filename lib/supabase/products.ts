@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/server";
 import { PRODUCTS as FALLBACK_PRODUCTS } from "@/lib/mock-data";
 import type { Product } from "@/types";
 
@@ -62,7 +62,7 @@ function mapProduct(row: ProductRow, images: ImageRow[], variants: VariantRow[])
  * empty. */
 export async function getAllProducts(): Promise<Product[]> {
   try {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
     const { data: rows, error } = await supabase
       .from("products")
       .select(

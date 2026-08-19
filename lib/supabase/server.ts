@@ -41,3 +41,19 @@ export function createAdminClient() {
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
 }
+
+/** Public-read client — anon key, no session/cookies. Use for storefront
+ * reads that are the same for every visitor (product catalogue, hero
+ * slides, announcements — all gated by "is_active = true" RLS policies
+ * anyone can read). Unlike `createClient()`, this never touches
+ * `next/headers` cookies(), so pages using it are NOT forced into fully
+ * dynamic (uncached, per-request) rendering — they can use `revalidate`
+ * and actually get served from cache. Never use this for anything that
+ * needs to know who's signed in. */
+export function createPublicClient() {
+  return createRawClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  );
+}

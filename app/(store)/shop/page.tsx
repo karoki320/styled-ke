@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description: "Browse all Styled.ke fashion — dresses, tops and more, all KES 1,500.",
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60; // cache the page for 60s and serve it instantly; refresh in the background
 
 export default async function ShopAllPage() {
   const products = await getAllProducts();

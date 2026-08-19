@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { getAllProducts, getProductBySlug, getRelatedProducts } from "@/lib/supabase/products";
 import { ProductDetail } from "@/components/store/ProductDetail";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60; // cache the page for 60s and serve it instantly; refresh in the background
 
 export async function generateMetadata({
   params,

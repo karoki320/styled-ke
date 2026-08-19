@@ -8,7 +8,7 @@ const SLUG_MAP: Record<string, ShopFilter> = {
   sale: "Sale",
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60; // cache the page for 60s and serve it instantly; refresh in the background
 
 export function generateMetadata({
   params,

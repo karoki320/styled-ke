@@ -218,6 +218,15 @@ export interface Database {
         created_at: string;
         updated_at: string;
       }>;
+      announcements: Row<{
+        id: string;
+        message: string;
+        link_href: string | null;
+        sort_order: number;
+        is_active: boolean;
+        created_at: string;
+        updated_at: string;
+      }>;
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
