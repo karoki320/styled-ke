@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { buildBluetoothPrintPayload, type ReceiptData, type BluetoothPrintAppItem } from "@/lib/pos-printer";
+import { buildBluetoothPrintPayload, LOGO_PATH, type ReceiptData, type BluetoothPrintAppItem } from "@/lib/pos-printer";
 
 export const dynamic = "force-dynamic";
 
@@ -46,7 +46,8 @@ export async function GET(req: NextRequest) {
     const json = Buffer.from(b64, "base64").toString("utf-8");
     const data = JSON.parse(json) as ReceiptData;
     const width = req.nextUrl.searchParams.get("w") === "80" ? 42 : 32;
-    const items = buildBluetoothPrintPayload(data, width);
+    const logoUrl = `${req.nextUrl.origin}${LOGO_PATH}`;
+    const items = buildBluetoothPrintPayload(data, width, logoUrl);
     return NextResponse.json(asObject(items), { headers: { "Cache-Control": "no-store" } });
   } catch {
     return fallback("Could not read this receipt.");

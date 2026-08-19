@@ -20,6 +20,7 @@ import {
   isAndroid,
   buildBluetoothPrintAppUrl,
   BLUETOOTH_PRINT_APP_URL,
+  LOGO_PATH,
   type ReceiptData,
 } from "@/lib/pos-printer";
 
@@ -618,6 +619,10 @@ function ReceiptModal({
         <>
           <style>{`@page { size: ${paperWidth}mm auto; margin: 0; }`}</style>
           <div className="receipt-print hidden" style={{ width: paperWidth === 80 ? "80mm" : "58mm" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element -- plain <img> for print
+                reliability; next/image's lazy-load/optimization behavior isn't meant for a
+                display:none element that only becomes visible inside @media print. */}
+            <img src={LOGO_PATH} alt="Styled.ke" style={{ display: "block", width: "45%", margin: "0 auto 6px" }} />
             <pre style={{ fontFamily: "monospace", fontSize: "9.5px", lineHeight: 1.35, whiteSpace: "pre", margin: 0 }}>
               {lines.join("\n")}
             </pre>
