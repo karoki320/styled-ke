@@ -204,7 +204,7 @@ function wrap(s: string, width: number): string[] {
  * printer to burn (more heat, more time, heavier-looking on the paper) and
  * most receipt headers just show the mark itself. This version keeps only
  * the circular badge cropped tight, composited onto plain white. */
-export const LOGO_PATH = "/images/logo-print.png";
+export const LOGO_PATH = "/images/logo-print.jpg";
 
 /** Plain-text receipt lines (used for both the ESC/POS build and, if ever
  * useful, on-screen debugging) — the single source of truth for layout so
