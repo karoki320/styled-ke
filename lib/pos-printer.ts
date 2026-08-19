@@ -287,3 +287,70 @@ export async function printReceiptViaBluetooth(data: ReceiptData): Promise<void>
     }
   }
 }
+
+// ---------- "Bluetooth Print" companion app (Android) ----------
+//
+// Xprinter's own integration docs point to a free Android app called
+// "Bluetooth Print" (package mate.bluetoothprint, on the Play Store) that
+// solves the exact gap Web Bluetooth can't: it's a native app, so it can
+// pair over CLASSIC Bluetooth (the mode most of these handheld printers
+// actually use) rather than being limited to BLE. The integration is a
+// custom URL scheme: a link like
+//   my.bluetoothprint.scheme://<RESPONSEURL>
+// opens the app, which then fetches <RESPONSEURL> itself and prints
+// whatever JSON it gets back. So our job is just: (1) a link the admin
+// taps, and (2) a URL that responds with the receipt in their JSON
+// format. That's what buildBluetoothPrintAppUrl() + the API route at
+// app/api/pos/receipt/route.ts do.
+//
+// This only makes sense on Android (the app doesn't exist for
+// Windows/iOS), so it's offered as an extra option alongside the Web
+// Bluetooth / print-dialog paths above, not a replacement for them.
+
+export const BLUETOOTH_PRINT_APP_URL = "https://play.google.com/store/apps/details?id=mate.bluetoothprint";
+
+export function isAndroid(): boolean {
+  return typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent);
+}
+
+export interface BluetoothPrintAppItem {
+  type: 0; // text — the only entry type we need for a plain receipt slip
+  content: string;
+  bold: 0 | 1;
+  align: 0 | 1 | 2; // left / center / right
+  format: 0 | 1 | 2 | 3 | 4; // normal / double-height / double H+W / double-width / small
+}
+
+/** Maps our shared receipt layout onto the "Bluetooth Print" app's JSON
+ * schema — same line content as the ESC/POS and print-dialog paths, so all
+ * three print outputs stay in sync. */
+export function buildBluetoothPrintPayload(data: ReceiptData, width: number): BluetoothPrintAppItem[] {
+  const lines = buildReceiptLines(data, width);
+  return lines.map((line, i) => {
+    const isHeader = i <= 1; // "STYLED.KE" + WhatsApp line
+    const isFooter = i >= lines.length - 2; // the two "thank you" lines
+    const isTotal = line.startsWith("TOTAL");
+    return {
+      type: 0,
+      content: line.length ? line : " ", // empty content can confuse the app's parser
+      bold: isHeader || isTotal ? 1 : 0,
+      align: isHeader || isFooter ? 1 : 0,
+      format: 0,
+    };
+  });
+}
+
+/** Builds the my.bluetoothprint.scheme:// link. `origin` must be the real
+ * publicly-reachable site origin (e.g. https://styled.ke) — the printer
+ * app fetches the response URL itself, over the phone's own connection,
+ * not through this browser tab, so it can't reach localhost. */
+export function buildBluetoothPrintAppUrl(data: ReceiptData, origin: string, paperWidth: 58 | 80): string {
+  const json = JSON.stringify(data);
+  const b64 =
+    typeof window !== "undefined"
+      ? window.btoa(unescape(encodeURIComponent(json)))
+      : Buffer.from(json, "utf-8").toString("base64");
+  const b64url = b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  const responseUrl = `${origin}/api/pos/receipt?d=${b64url}&w=${paperWidth}`;
+  return `my.bluetoothprint.scheme://${responseUrl}`;
+}

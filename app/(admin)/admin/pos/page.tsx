@@ -16,6 +16,9 @@ import {
   buildReceiptLines,
   getPaperWidth,
   setPaperWidth,
+  isAndroid,
+  buildBluetoothPrintAppUrl,
+  BLUETOOTH_PRINT_APP_URL,
   type ReceiptData,
 } from "@/lib/pos-printer";
 
@@ -437,10 +440,19 @@ function ReceiptModal({
   const [printing, setPrinting] = useState(false);
   const [printError, setPrintError] = useState<string | null>(null);
   const [paperWidth, setWidth] = useState<58 | 80>(58);
+  const [btPrintUrl, setBtPrintUrl] = useState<string | null>(null);
+  const onAndroid = typeof window !== "undefined" && isAndroid();
 
   useEffect(() => {
     setWidth(getPaperWidth());
   }, []);
+
+  useEffect(() => {
+    if (onAndroid) {
+      setBtPrintUrl(buildBluetoothPrintAppUrl(receipt, window.location.origin, paperWidth));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paperWidth]);
 
   const changeWidth = (w: 58 | 80) => {
     setWidth(w);
@@ -544,13 +556,37 @@ function ReceiptModal({
           </button>
         </div>
 
+        {onAndroid && btPrintUrl ? (
+          <div className="mb-2 flex flex-col gap-2">
+            <a
+              href={btPrintUrl}
+              className="btn-blk w-full justify-center gap-1.5 py-2.5 text-[0.68rem]"
+            >
+              <Printer size={13} /> PRINT TO BLUETOOTH PRINTER
+            </a>
+            <p className="text-[0.6rem] leading-relaxed text-gray-400">
+              First time? Install the free{" "}
+              <a href={BLUETOOTH_PRINT_APP_URL} target="_blank" rel="noreferrer" className="underline">
+                Bluetooth Print
+              </a>{" "}
+              app, pair it with your printer, then turn on &ldquo;Browser Print&rdquo; in its settings. After that, this
+              button prints straight to it.
+            </p>
+          </div>
+        ) : null}
+
         <div className="flex flex-col gap-2">
           <button
             onClick={handlePrint}
             disabled={printing}
-            className="btn-out w-full justify-center gap-1.5 py-2.5 text-[0.68rem] disabled:opacity-50"
+            className={
+              onAndroid && btPrintUrl
+                ? "btn-out w-full justify-center gap-1.5 py-2 text-[0.62rem] disabled:opacity-50"
+                : "btn-out w-full justify-center gap-1.5 py-2.5 text-[0.68rem] disabled:opacity-50"
+            }
           >
-            <Printer size={13} /> {printing ? "PRINTING…" : "PRINT RECEIPT"}
+            <Printer size={13} />{" "}
+            {printing ? "PRINTING…" : onAndroid && btPrintUrl ? "OR USE BROWSER PRINT" : "PRINT RECEIPT"}
           </button>
           <button onClick={onClose} className="btn-blk w-full justify-center py-2.5 text-[0.68rem]">
             NEW SALE
