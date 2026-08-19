@@ -237,8 +237,8 @@ export function buildReceiptLines(data: ReceiptData, width: number): string[] {
     lines.push(twoCol("Change", fmt(data.change ?? 0), width));
   }
   lines.push(rule);
-  lines.push("Thank you for shopping");
-  lines.push("at Styled.ke!");
+  lines.push("Thanks for shopping with us!");
+  lines.push("We hope to see you again soon.");
 
   return lines;
 }

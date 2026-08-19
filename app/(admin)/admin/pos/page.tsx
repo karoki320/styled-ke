@@ -7,6 +7,7 @@ import { Receipt, Banknote, Smartphone, CreditCard, FileText, CircleCheck, Print
 import { PRODUCTS } from "@/lib/mock-data";
 import { fmtKES } from "@/lib/utils";
 import { usePOSStore, type POSPaymentMethod, type POSLineItem } from "@/store/pos";
+import { createClient } from "@/lib/supabase/client";
 import type { Product } from "@/types";
 import {
   isBluetoothSupported,
@@ -74,6 +75,7 @@ function POSWorkspace() {
   const [receipt, setReceipt] = useState<ReceiptData | null>(null);
   const [printerName, setPrinterName] = useState<string | null>(null);
   const [connecting, setConnecting] = useState(false);
+  const [finalizingSale, setFinalizingSale] = useState(false);
 
   useEffect(() => {
     setPrinterName(getConnectedPrinterName());
@@ -126,8 +128,7 @@ function POSWorkspace() {
     });
   }, [category, search]);
 
-  const finalizeSale = (method: POSPaymentMethod, amountReceived?: number) => {
-    const orderNo = `#SK-${Math.floor(Math.random() * 9000) + 1000}`;
+  const finalizeSale = async (method: POSPaymentMethod, amountReceived?: number) => {
     const saleSubtotal = subtotal();
     const saleTotal = total();
     // Snapshot the sale before clearSale() wipes it — the receipt needs the
@@ -138,6 +139,41 @@ function POSWorkspace() {
       price: i.price,
       lineTotal: i.price * i.qty,
     }));
+    const change = amountReceived !== undefined ? Math.max(0, amountReceived - saleTotal) : undefined;
+    const customerPhone = customer?.phone || null;
+
+    // Persist the sale to get a real, sequential, reconcilable receipt
+    // number (SK-000047, ...) instead of a random one that's never saved
+    // anywhere — falls back to a random number only if the save itself
+    // fails (offline, Supabase misconfigured), so the till is never
+    // blocked from completing a sale.
+    setFinalizingSale(true);
+    let orderNo = `SK-${Math.floor(Math.random() * 900000) + 100000}`;
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("pos_sales")
+        .insert({
+          items,
+          subtotal: saleSubtotal,
+          discount,
+          total: saleTotal,
+          payment_method: method,
+          amount_received: amountReceived ?? null,
+          change_amount: change ?? null,
+          customer_phone: customerPhone,
+        })
+        .select("sale_number")
+        .single();
+      if (!error && data) {
+        orderNo = `SK-${String(data.sale_number).padStart(6, "0")}`;
+      }
+    } catch {
+      // offline / Supabase not configured — keep the random fallback
+    } finally {
+      setFinalizingSale(false);
+    }
+
     recordPayment(method, saleTotal);
     setReceipt({
       orderNo,
@@ -148,8 +184,8 @@ function POSWorkspace() {
       total: saleTotal,
       method,
       amountReceived,
-      change: amountReceived !== undefined ? Math.max(0, amountReceived - saleTotal) : undefined,
-      customerPhone: customer?.phone || null,
+      change,
+      customerPhone,
     });
     clearSale();
     setPayment(null);
@@ -323,6 +359,7 @@ function POSWorkspace() {
         <PaymentModal
           method={payment}
           total={total()}
+          saving={finalizingSale}
           onClose={() => setPayment(null)}
           onConfirm={(amountReceived) => finalizeSale(payment, amountReceived)}
         />
@@ -358,11 +395,13 @@ function PayButton({
 function PaymentModal({
   method,
   total,
+  saving,
   onClose,
   onConfirm,
 }: {
   method: POSPaymentMethod;
   total: number;
+  saving: boolean;
   onClose: () => void;
   onConfirm: (amountReceived?: number) => void;
 }) {
@@ -417,14 +456,15 @@ function PaymentModal({
         )}
 
         <div className="flex gap-2.5">
-          <button onClick={onClose} className="btn-out flex-1 justify-center py-3 text-[0.7rem]">
+          <button onClick={onClose} disabled={saving} className="btn-out flex-1 justify-center py-3 text-[0.7rem] disabled:opacity-50">
             CANCEL
           </button>
           <button
             onClick={() => onConfirm(method === "cash" ? Number(received) : undefined)}
-            className="btn-blk flex-[2] justify-center py-3 text-[0.7rem]"
+            disabled={saving}
+            className="btn-blk flex-[2] justify-center py-3 text-[0.7rem] disabled:opacity-60"
           >
-            ✓ CONFIRM
+            {saving ? "SAVING…" : "✓ CONFIRM"}
           </button>
         </div>
       </div>
@@ -532,9 +572,9 @@ function ReceiptModal({
             )}
           </div>
           <div className="mt-3 text-center text-[0.7rem] text-gray-400">
-            Thank you for shopping at Styled.ke!
+            Thanks for shopping with us!
             <br />
-            WhatsApp: 0734 807 511
+            We hope to see you again soon.
           </div>
         </div>
 

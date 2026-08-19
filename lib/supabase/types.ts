@@ -227,6 +227,20 @@ export interface Database {
         created_at: string;
         updated_at: string;
       }>;
+      pos_sales: Row<{
+        id: string;
+        sale_number: number;
+        items: Json;
+        subtotal: number;
+        discount: number;
+        total: number;
+        payment_method: string;
+        amount_received: number | null;
+        change_amount: number | null;
+        customer_phone: string | null;
+        created_by: string | null;
+        created_at: string;
+      }>;
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
