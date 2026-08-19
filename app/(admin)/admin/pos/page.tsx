@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import { Receipt, Banknote, Smartphone, CreditCard, FileText, CircleCheck, Printer, Bluetooth, BluetoothConnected, type LucideIcon } from "lucide-react";
 import { PRODUCTS } from "@/lib/mock-data";
@@ -441,10 +442,12 @@ function ReceiptModal({
   const [printError, setPrintError] = useState<string | null>(null);
   const [paperWidth, setWidth] = useState<58 | 80>(58);
   const [btPrintUrl, setBtPrintUrl] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
   const onAndroid = typeof window !== "undefined" && isAndroid();
 
   useEffect(() => {
     setWidth(getPaperWidth());
+    setMounted(true);
   }, []);
 
   useEffect(() => {
@@ -556,58 +559,72 @@ function ReceiptModal({
           </button>
         </div>
 
-        {onAndroid && btPrintUrl ? (
-          <div className="mb-2 flex flex-col gap-2">
-            <a
-              href={btPrintUrl}
-              className="btn-blk w-full justify-center gap-1.5 py-2.5 text-[0.68rem]"
-            >
-              <Printer size={13} /> PRINT TO BLUETOOTH PRINTER
-            </a>
-            <p className="text-[0.6rem] leading-relaxed text-gray-400">
-              First time? Install the free{" "}
-              <a href={BLUETOOTH_PRINT_APP_URL} target="_blank" rel="noreferrer" className="underline">
-                Bluetooth Print
-              </a>{" "}
-              app, pair it with your printer, then turn on &ldquo;Browser Print&rdquo; in its settings. After that, this
-              button prints straight to it.
-            </p>
-          </div>
-        ) : null}
-
         <div className="flex flex-col gap-2">
-          <button
-            onClick={handlePrint}
-            disabled={printing}
-            className={
-              onAndroid && btPrintUrl
-                ? "btn-out w-full justify-center gap-1.5 py-2 text-[0.62rem] disabled:opacity-50"
-                : "btn-out w-full justify-center gap-1.5 py-2.5 text-[0.68rem] disabled:opacity-50"
-            }
-          >
-            <Printer size={13} />{" "}
-            {printing ? "PRINTING…" : onAndroid && btPrintUrl ? "OR USE BROWSER PRINT" : "PRINT RECEIPT"}
-          </button>
-          <button onClick={onClose} className="btn-blk w-full justify-center py-2.5 text-[0.68rem]">
+          {onAndroid && btPrintUrl ? (
+            // One tap, straight to the paired printer — no dialog, no
+            // paper-size guesswork. This is the path that actually works
+            // reliably on the phone/tablet the till runs on.
+            <a href={btPrintUrl} className="btn-blk w-full justify-center gap-1.5 py-3 text-[0.72rem]">
+              <Printer size={14} /> PRINT RECEIPT
+            </a>
+          ) : (
+            <button
+              onClick={handlePrint}
+              disabled={printing}
+              className="btn-blk w-full justify-center gap-1.5 py-3 text-[0.72rem] disabled:opacity-50"
+            >
+              <Printer size={14} /> {printing ? "PRINTING…" : "PRINT RECEIPT"}
+            </button>
+          )}
+          <button onClick={onClose} className="btn-out w-full justify-center py-2.5 text-[0.68rem]">
             NEW SALE
           </button>
+          {onAndroid && btPrintUrl && (
+            <button
+              onClick={handlePrint}
+              disabled={printing}
+              className="text-[0.62rem] text-gray-400 underline disabled:opacity-50"
+            >
+              Not printing? Use browser print instead
+            </button>
+          )}
         </div>
+
+        {onAndroid && btPrintUrl && (
+          <p className="mt-3 text-[0.6rem] leading-relaxed text-gray-400">
+            First time printing? Install the free{" "}
+            <a href={BLUETOOTH_PRINT_APP_URL} target="_blank" rel="noreferrer" className="underline">
+              Bluetooth Print
+            </a>{" "}
+            app, pair it with your printer once, and turn on &ldquo;Browser Print&rdquo; in its settings — after
+            that this button just works.
+          </p>
+        )}
       </div>
     </div>
 
-    {/* Printable slip — sits OUTSIDE the modal's print:hidden wrapper on
-        purpose: an ancestor's `display: none` always wins over any display
-        value the child sets in @media print, so this can't live inside the
-        modal above. Hidden on screen, shown only by the @media print rule
-        in globals.css when the browser print dialog opens (the fallback /
-        non-Bluetooth path). Kept in sync with the Bluetooth print via
-        buildReceiptLines() so both paths always show the same content. */}
-    <style>{`@page { size: ${paperWidth}mm auto; margin: 0; }`}</style>
-    <div className="receipt-print hidden" style={{ width: paperWidth === 80 ? "80mm" : "58mm" }}>
-      <pre style={{ fontFamily: "monospace", fontSize: "9.5px", lineHeight: 1.35, whiteSpace: "pre", margin: 0 }}>
-        {lines.join("\n")}
-      </pre>
-    </div>
+    {/* Printable slip — portaled straight onto document.body, not just
+        rendered as a sibling in the component tree. globals.css hides
+        print output with `body * { display: none }`, and display:none on
+        ANY ancestor wins over a descendant's own display:block — the admin
+        layout has several wrapper divs between <body> and this component,
+        and every one of them would otherwise swallow the receipt too. A
+        direct child of body has no such ancestors to worry about. Hidden
+        on screen, shown only by @media print (the fallback / non-Bluetooth
+        path). Kept in sync with the Bluetooth print via buildReceiptLines()
+        so both paths always show the same content. */}
+    {mounted &&
+      createPortal(
+        <>
+          <style>{`@page { size: ${paperWidth}mm auto; margin: 0; }`}</style>
+          <div className="receipt-print hidden" style={{ width: paperWidth === 80 ? "80mm" : "58mm" }}>
+            <pre style={{ fontFamily: "monospace", fontSize: "9.5px", lineHeight: 1.35, whiteSpace: "pre", margin: 0 }}>
+              {lines.join("\n")}
+            </pre>
+          </div>
+        </>,
+        document.body
+      )}
     </>
   );
 }

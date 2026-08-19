@@ -231,20 +231,25 @@ a {
    everything except the narrow `.receipt-print` slip that's built
    in the ReceiptModal component, matching the paper width the
    admin picked (58mm / 80mm).
+
+   Uses display:none rather than visibility:hidden — visibility still
+   reserves layout space for the hidden admin dashboard behind it,
+   which on Android's print pipeline showed up as the receipt crammed
+   into a corner of an otherwise-blank A4-sized page that then
+   overflowed onto a second, empty page. display:none removes the
+   hidden content from layout entirely, so the printed page is just
+   the receipt with nothing reserved around it.
    ───────────────────────────────────────────────────────────────── */
 @media print {
   body * {
-    visibility: hidden;
+    display: none !important;
   }
   .receipt-print,
   .receipt-print *:not(style):not(script) {
-    visibility: visible;
     display: block !important;
   }
   .receipt-print {
-    position: fixed;
-    top: 0;
-    left: 0;
+    position: static;
     margin: 0;
     padding: 3mm;
   }
