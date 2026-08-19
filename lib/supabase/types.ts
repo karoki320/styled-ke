@@ -238,6 +238,7 @@ export interface Database {
         amount_received: number | null;
         change_amount: number | null;
         customer_phone: string | null;
+        branch: string;
         created_by: string | null;
         created_at: string;
       }>;

@@ -153,6 +153,7 @@ export interface ReceiptData {
   amountReceived?: number;
   change?: number;
   customerPhone?: string | null;
+  branch?: string;
 }
 
 function fmt(n: number): string {
@@ -229,6 +230,7 @@ export function buildReceiptLines(data: ReceiptData, width: number): string[] {
   lines.push(rule);
   lines.push(`Order: ${data.orderNo}`);
   lines.push(data.dateTime);
+  if (data.branch) lines.push(`Branch: ${data.branch}`);
   if (data.customerPhone) lines.push(`Customer: ${data.customerPhone}`);
   lines.push(rule);
 

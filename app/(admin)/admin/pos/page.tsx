@@ -26,6 +26,7 @@ import {
   BRAND_TAGLINE,
   type ReceiptData,
 } from "@/lib/pos-printer";
+import { POS_BRANCHES, getBranch, setBranch, type POSBranch } from "@/lib/pos-branches";
 
 const CATEGORY_TABS: ("All" | Product["category"])[] = ["All", "Clothing"];
 
@@ -78,15 +79,22 @@ function POSWorkspace() {
   const [printerName, setPrinterName] = useState<string | null>(null);
   const [connecting, setConnecting] = useState(false);
   const [finalizingSale, setFinalizingSale] = useState(false);
+  const [branch, setBranchState] = useState<POSBranch>("Ufundi");
 
   useEffect(() => {
     setPrinterName(getConnectedPrinterName());
+    setBranchState(getBranch());
     if (isBluetoothSupported()) {
       tryAutoReconnect().then((name) => {
         if (name) setPrinterName(name);
       });
     }
   }, []);
+
+  const changeBranch = (b: POSBranch) => {
+    setBranchState(b);
+    setBranch(b);
+  };
 
   const handleConnectPrinter = async () => {
     setConnecting(true);
@@ -164,6 +172,7 @@ function POSWorkspace() {
           amount_received: amountReceived ?? null,
           change_amount: change ?? null,
           customer_phone: customerPhone,
+          branch,
         })
         .select("sale_number")
         .single();
@@ -188,6 +197,7 @@ function POSWorkspace() {
       amountReceived,
       change,
       customerPhone,
+      branch,
     });
     clearSale();
     setPayment(null);
@@ -217,6 +227,22 @@ function POSWorkspace() {
           <div className="flex items-center gap-3">
             <div className="text-[0.68rem] text-gray-400">
               Session opened {new Date(session.openedAt!).toLocaleTimeString()}
+            </div>
+            <div className="flex items-center gap-1" title="Which branch this till's sales are tagged with">
+              {POS_BRANCHES.map((b) => (
+                <button
+                  key={b}
+                  onClick={() => changeBranch(b)}
+                  className="border px-2 py-1 text-[0.62rem] font-semibold uppercase tracking-wide"
+                  style={{
+                    background: branch === b ? "#1a1a1a" : "#fff",
+                    color: branch === b ? "#fff" : "#888",
+                    borderColor: branch === b ? "#1a1a1a" : "#e8e8e8",
+                  }}
+                >
+                  {b}
+                </button>
+              ))}
             </div>
             <button
               onClick={printerName ? undefined : handleConnectPrinter}
