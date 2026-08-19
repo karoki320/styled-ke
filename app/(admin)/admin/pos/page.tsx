@@ -22,6 +22,8 @@ import {
   buildBluetoothPrintAppUrl,
   BLUETOOTH_PRINT_APP_URL,
   LOGO_PATH,
+  BRAND_NAME,
+  BRAND_TAGLINE,
   type ReceiptData,
 } from "@/lib/pos-printer";
 
@@ -526,6 +528,10 @@ function ReceiptModal({
   };
 
   const lines = buildReceiptLines(receipt, paperWidth === 80 ? 42 : 32);
+  // First two lines are the brand name + tagline — rendered as styled text
+  // below instead of dumped into the plain <pre>, so the print-dialog path
+  // gets real bold/centered branding too, not just monospace-with-spaces.
+  const bodyLines = lines.slice(2);
 
   return (
     <>
@@ -663,8 +669,12 @@ function ReceiptModal({
                 reliability; next/image's lazy-load/optimization behavior isn't meant for a
                 display:none element that only becomes visible inside @media print. */}
             <img src={LOGO_PATH} alt="Styled.ke" style={{ display: "block", width: "45%", margin: "0 auto 6px" }} />
+            <div style={{ textAlign: "center", fontWeight: 700, fontSize: "12px", letterSpacing: "0.5px" }}>
+              {BRAND_NAME}
+            </div>
+            <div style={{ textAlign: "center", fontSize: "8.5px", marginBottom: "4px" }}>{BRAND_TAGLINE}</div>
             <pre style={{ fontFamily: "monospace", fontSize: "9.5px", lineHeight: 1.35, whiteSpace: "pre", margin: 0 }}>
-              {lines.join("\n")}
+              {bodyLines.join("\n")}
             </pre>
           </div>
         </>,

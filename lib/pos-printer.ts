@@ -206,17 +206,27 @@ function wrap(s: string, width: number): string[] {
  * the circular badge cropped tight, composited onto plain white. */
 export const LOGO_PATH = "/images/logo-print.jpg";
 
-/** Plain-text receipt lines (used for both the ESC/POS build and, if ever
- * useful, on-screen debugging) — the single source of truth for layout so
- * the Bluetooth print and the print-dialog print never drift apart. The
- * logo image carries the "Styled.ke" branding now, so there's no text
- * header here — every caller renders the logo above these lines in
- * whatever form fits its output (an <img>, a JSON image entry, or an
- * ESC/POS raster image). */
+/** Plain-text brand header — always part of buildReceiptLines() below, so
+ * every print path (ESC/POS, the Bluetooth Print app, and the browser
+ * print-dialog fallback) shows the shop name even when the logo image
+ * doesn't render. The logo image is still attempted everywhere it can be
+ * (it looks nicer), but it's an image fetched independently by whatever is
+ * doing the printing — the Bluetooth Print Android app in particular has
+ * turned out to silently drop it in real-device testing with no error, so
+ * text branding is the one guarantee, not a fallback bolted on for the
+ * failure case. */
+export const BRAND_NAME = "STYLED.KE";
+export const BRAND_TAGLINE = "Fashion & Scents";
+
+/** Plain-text receipt lines — the single source of truth for layout so all
+ * three print paths never drift apart. */
 export function buildReceiptLines(data: ReceiptData, width: number): string[] {
   const lines: string[] = [];
   const rule = "-".repeat(width);
 
+  lines.push(BRAND_NAME);
+  lines.push(BRAND_TAGLINE);
+  lines.push(rule);
   lines.push(`Order: ${data.orderNo}`);
   lines.push(data.dateTime);
   if (data.customerPhone) lines.push(`Customer: ${data.customerPhone}`);
@@ -298,7 +308,7 @@ async function buildLogoRasterBytes(printerDots: number): Promise<number[] | nul
   }
 }
 
-function buildEscPosBytes(data: ReceiptData, width: number, includeTextHeader: boolean): Uint8Array {
+function buildEscPosBytes(data: ReceiptData, width: number): Uint8Array {
   const bytes: number[] = [];
   const raw = (...b: number[]) => bytes.push(...b);
   const text = (s: string) => bytes.push(...Array.from(asciiOnly(s)).map((c) => c.charCodeAt(0)));
@@ -310,22 +320,16 @@ function buildEscPosBytes(data: ReceiptData, width: number, includeTextHeader: b
   const left = () => raw(ESC, 0x61, 0x00);
   const bold = (on: boolean) => raw(ESC, 0x45, on ? 1 : 0);
 
-  if (includeTextHeader) {
-    // Logo raster failed (offline, decode error) — fall back to a plain
-    // text header so the receipt still identifies the shop.
-    center();
-    bold(true);
-    line("STYLED.KE");
-    bold(false);
-    left();
-  }
-
   const bodyLines = buildReceiptLines(data, width);
   const totalLineIdx = bodyLines.findIndex((l) => l.startsWith("TOTAL"));
   bodyLines.forEach((l, i) => {
-    if (i === totalLineIdx) bold(true);
+    const isBrand = l === BRAND_NAME;
+    const isTagline = l === BRAND_TAGLINE;
+    if (isBrand || isTagline) center();
+    if (i === totalLineIdx || isBrand) bold(true);
     line(l);
-    if (i === totalLineIdx) bold(false);
+    if (i === totalLineIdx || isBrand) bold(false);
+    if (isBrand || isTagline) left();
   });
 
   raw(0x0a, 0x0a, 0x0a);
@@ -343,7 +347,7 @@ export async function printReceiptViaBluetooth(data: ReceiptData): Promise<void>
   const printerDots = paperWidth === 80 ? 576 : 384;
 
   const logoBytes = await buildLogoRasterBytes(printerDots);
-  const textBytes = buildEscPosBytes(data, width, !logoBytes);
+  const textBytes = buildEscPosBytes(data, width);
 
   const payload = new Uint8Array([
     ESC,
@@ -413,12 +417,14 @@ export function buildBluetoothPrintPayload(data: ReceiptData, width: number, log
   const textItems: BluetoothPrintTextItem[] = lines.map((line, i) => {
     const isFooter = i >= lines.length - 2; // the two "thank you" lines
     const isTotal = line.startsWith("TOTAL");
+    const isBrand = line === BRAND_NAME;
+    const isTagline = line === BRAND_TAGLINE;
     return {
       type: 0,
       content: line.length ? line : " ", // empty content can confuse the app's parser
-      bold: isTotal ? 1 : 0,
-      align: isFooter ? 1 : 0,
-      format: 0,
+      bold: isTotal || isBrand ? 1 : 0,
+      align: isFooter || isBrand || isTagline ? 1 : 0,
+      format: isBrand ? 3 : 0, // 3 = double width, per the app's own docs — makes the shop name read like a header
     };
   });
   if (!logoUrl) return textItems;
