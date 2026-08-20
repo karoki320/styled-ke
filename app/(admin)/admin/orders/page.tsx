@@ -1,8 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Download, Printer } from "lucide-react";
-import { ORDERS } from "@/lib/mock-data";
 import { fmtKES, formatDate, waLink } from "@/lib/utils";
 import { STATUS_COLORS, STATUS_LABELS } from "@/components/admin/StatusBadge";
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
@@ -19,12 +18,86 @@ const STATUS_MEANING: Record<OrderStatus, string> = {
   cancelled: "Order was cancelled and will not ship.",
 };
 
+// Raw shape returned by GET /api/admin/orders — one row per order, with
+// customer and line-item details embedded via Supabase's foreign-key joins.
+interface OrderApiRow {
+  id: string;
+  order_number: string;
+  status: OrderStatus;
+  source: string | null;
+  subtotal: number;
+  delivery_fee: number;
+  total: number;
+  delivery_method: string | null;
+  delivery_address: string | null;
+  delivery_city: string | null;
+  delivery_zone: string | null;
+  delivery_agent: string | null;
+  payment_method: string | null;
+  payment_status: string;
+  created_at: string;
+  customers: { full_name: string; phone: string } | null;
+  order_items: { product_name: string; quantity: number }[] | null;
+}
+
+interface OrdersApiResponse {
+  configured: boolean;
+  orders?: OrderApiRow[];
+  error?: string;
+}
+
+/** Same fields the printed/emailed receipts use to build a delivery
+ * description — kept consistent with app/api/orders/route.ts. */
+function deliveryLocation(row: OrderApiRow): string {
+  const parts = [row.delivery_address, row.delivery_zone, row.delivery_agent, row.delivery_city].filter(Boolean);
+  return parts.length ? parts.join(", ") : "—";
+}
+
+function itemsSummary(row: OrderApiRow): string {
+  const items = row.order_items || [];
+  if (!items.length) return "—";
+  return items.map((i) => `${i.product_name} x${i.quantity}`).join(", ");
+}
+
+function toOrder(row: OrderApiRow): Order {
+  return {
+    id: row.id,
+    order_number: row.order_number,
+    customer_name: row.customers?.full_name || "Unknown customer",
+    customer_phone: row.customers?.phone || "—",
+    items_summary: itemsSummary(row),
+    subtotal: row.subtotal,
+    delivery_fee: row.delivery_fee,
+    total: row.total,
+    status: row.status,
+    source: (row.source as Order["source"]) || "website",
+    payment_method: row.payment_method as Order["payment_method"],
+    payment_status: row.payment_status as Order["payment_status"],
+    delivery_method: row.delivery_method as Order["delivery_method"],
+    delivery_location: deliveryLocation(row),
+    created_at: row.created_at,
+  };
+}
+
 export default function AdminOrdersPage() {
-  const [orders, setOrders] = useState<Order[]>(ORDERS);
+  const [data, setData] = useState<OrdersApiResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"All" | OrderStatus>("All");
   const [selected, setSelected] = useState<string[]>([]);
   const [drawerOrder, setDrawerOrder] = useState<Order | null>(null);
+
+  useEffect(() => {
+    fetch("/api/admin/orders")
+      .then((r) => r.json())
+      .then((res: OrdersApiResponse) => {
+        setData(res);
+        setOrders((res.orders || []).map(toOrder));
+      })
+      .catch(() => setData({ configured: true, error: "Failed to load orders." }))
+      .finally(() => setLoading(false));
+  }, []);
 
   const filtered = useMemo(() => {
     return orders.filter((o) => {
@@ -39,13 +112,39 @@ export default function AdminOrdersPage() {
     });
   }, [orders, search, statusFilter]);
 
-  const updateStatus = (id: string, status: OrderStatus) =>
+  // Optimistic UI: flip the row locally right away, then persist via the
+  // admin-gated PATCH route. On failure, revert and surface it — silently
+  // leaving the UI showing a status that was never actually saved would be
+  // worse than a visible error.
+  const persistStatus = async (id: string, status: OrderStatus, previous: OrderStatus) => {
+    try {
+      const res = await fetch(`/api/admin/orders/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (!res.ok) throw new Error("Update failed");
+    } catch {
+      setOrders((list) => list.map((o) => (o.id === id ? { ...o, status: previous } : o)));
+      alert("Couldn't save that status change — please try again.");
+    }
+  };
+
+  const updateStatus = (id: string, status: OrderStatus) => {
+    const previous = orders.find((o) => o.id === id)?.status;
     setOrders((list) => list.map((o) => (o.id === id ? { ...o, status } : o)));
+    if (previous) persistStatus(id, status, previous);
+  };
 
   const bulkUpdate = (status: OrderStatus) => {
     if (selected.length === 0) return;
     if (!confirm(`Mark ${selected.length} order(s) as ${STATUS_LABELS[status]}?`)) return;
+    const previousById = new Map(orders.map((o) => [o.id, o.status]));
     setOrders((list) => list.map((o) => (selected.includes(o.id) ? { ...o, status } : o)));
+    selected.forEach((id) => {
+      const previous = previousById.get(id);
+      if (previous) persistStatus(id, status, previous);
+    });
     setSelected([]);
   };
 
@@ -77,6 +176,18 @@ export default function AdminOrdersPage() {
     delivered: orders.filter((o) => o.status === "delivered").length,
   };
 
+  if (loading) {
+    return (
+      <div>
+        <div className="mb-5">
+          <span className="sec-label">Management</span>
+          <h1 className="pf text-[1.65rem] font-bold">All Orders</h1>
+        </div>
+        <div className="border border-border bg-white p-8 text-center text-sm text-gray-400">Loading…</div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
@@ -88,6 +199,23 @@ export default function AdminOrdersPage() {
           <Download size={13} /> EXPORT CSV
         </button>
       </div>
+
+      {data && !data.configured && (
+        <div className="mb-4 border border-[#f0d9a8] bg-[#fffaf0] p-3.5 text-[0.74rem] text-[#8a6d1f]">
+          Supabase isn&rsquo;t connected yet, so there are no real orders to show. Once it&rsquo;s configured, every
+          order placed on the website or via WhatsApp will appear here automatically.
+        </div>
+      )}
+      {data?.error && (
+        <div className="mb-4 border border-[#f5c6cb] bg-[#fdecea] p-3.5 text-[0.74rem] text-[#a94442]">
+          {data.error}
+        </div>
+      )}
+      {data?.configured && orders.length === 0 && (
+        <div className="mb-4 border border-border bg-white p-3.5 text-[0.74rem] text-gray-400">
+          No orders yet — this fills in as customers check out on the website or through WhatsApp.
+        </div>
+      )}
 
       <div className="mb-4.5 grid grid-cols-2 gap-2.5 lg:grid-cols-4">
         {(["All", "pending", "processing", "delivered"] as const).map((s) => (
@@ -218,7 +346,7 @@ export default function AdminOrdersPage() {
             ))}
           </tbody>
         </table>
-        {filtered.length === 0 && (
+        {filtered.length === 0 && orders.length > 0 && (
           <p className="p-8 text-center text-sm text-muted">No orders match your filters.</p>
         )}
       </div>
