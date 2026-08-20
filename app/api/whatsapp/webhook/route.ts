@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyWebhookChallenge } from "@/lib/whatsapp";
+import { verifyWebhookChallenge, verifyMetaSignature } from "@/lib/whatsapp";
 import { createAdminClient } from "@/lib/supabase/server";
 import { AUTOMATION_FLOWS } from "@/lib/mock-data";
 
@@ -20,7 +20,12 @@ export async function GET(req: NextRequest) {
  * dashboard via Supabase Realtime (the dashboard subscribes to
  * whatsapp_messages inserts). */
 export async function POST(req: NextRequest) {
-  const body = await req.json();
+  const rawBody = await req.text();
+  const valid = await verifyMetaSignature(rawBody, req.headers.get("x-hub-signature-256"));
+  if (!valid) {
+    return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+  }
+  const body = JSON.parse(rawBody);
 
   const entry = body.entry?.[0];
   const change = entry?.changes?.[0];

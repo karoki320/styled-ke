@@ -1,11 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendWhatsAppText, sendWhatsAppTemplate } from "@/lib/whatsapp";
-import { createAdminClient } from "@/lib/supabase/server";
+import { createAdminClient, requireAdmin } from "@/lib/supabase/server";
+
+export const dynamic = "force-dynamic";
 
 /** Used by the admin WhatsApp dashboard (and order status "Notify" buttons)
  * to send an outbound message. Body: { to, text } for free-form text, or
- * { to, template, variables } for a template send. */
+ * { to, template, variables } for a template send.
+ *
+ * This was reachable with no auth at all before — anyone who found the URL
+ * could POST any `to` number and blast messages from the business's real
+ * WhatsApp number, which both costs money per Meta's pricing and risks
+ * Meta suspending the number for abuse. requireAdmin() closes that. */
 export async function POST(req: NextRequest) {
+  const admin = await requireAdmin();
+  if (!admin) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { to, text, template, variables, conversationId } = await req.json();
 
   if (!to || (!text && !template)) {

@@ -24,11 +24,12 @@ export async function POST(req: NextRequest) {
   const event = JSON.parse(rawBody);
 
   if (event.event === "charge.success") {
-    const { reference } = event.data;
+    const { reference, amount } = event.data;
 
     if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
       const supabase = createAdminClient();
-      await markOrderPaidAndNotify(supabase, reference, reference);
+      // amount is in kobo/cents from Paystack, per their API — /100 for KES.
+      await markOrderPaidAndNotify(supabase, reference, reference, amount / 100);
     }
   }
 

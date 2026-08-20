@@ -114,3 +114,29 @@ export function verifyWebhookChallenge(
   }
   return null;
 }
+
+/**
+ * Verifies Meta's `X-Hub-Signature-256` header on inbound webhook POSTs
+ * (HMAC SHA256 of the raw body, keyed with the app's secret — find it in
+ * the Meta App Dashboard under Settings -> Basic -> App Secret).
+ *
+ * Returns true when WHATSAPP_APP_SECRET isn't configured yet, same
+ * graceful-degradation philosophy as the rest of this app when an
+ * integration isn't wired up — but that means the endpoint is unverified
+ * until it is. Set WHATSAPP_APP_SECRET to actually enforce this: without
+ * it, anyone who finds this URL (a predictable, publicly-guessable path)
+ * can POST fake "incoming message" payloads that land straight in the
+ * admin WhatsApp dashboard and the automation-flow keyword matcher. */
+export async function verifyMetaSignature(rawBody: string, signatureHeader: string | null): Promise<boolean> {
+  const secret = process.env.WHATSAPP_APP_SECRET;
+  if (!secret) return true; // not configured — see doc comment above
+  if (!signatureHeader?.startsWith("sha256=")) return false;
+
+  const crypto = await import("node:crypto");
+  const expected = crypto.createHmac("sha256", secret).update(rawBody).digest("hex");
+  const provided = signatureHeader.slice("sha256=".length);
+
+  const a = Buffer.from(expected, "hex");
+  const b = Buffer.from(provided, "hex");
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}

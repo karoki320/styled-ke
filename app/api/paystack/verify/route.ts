@@ -27,7 +27,8 @@ export async function GET(req: NextRequest) {
     if (result.data.status === "success") {
       if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
         const supabase = createAdminClient();
-        await markOrderPaidAndNotify(supabase, reference, reference);
+        // result.data.amount is in kobo/cents from Paystack — /100 for KES.
+        await markOrderPaidAndNotify(supabase, reference, reference, result.data.amount / 100);
       }
 
       const params = new URLSearchParams({

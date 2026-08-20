@@ -93,9 +93,14 @@ export async function verifyWebhookSignature(
 ): Promise<boolean> {
   if (!signature) return false;
   const crypto = await import("node:crypto");
-  const hash = crypto
-    .createHmac("sha512", secretKey())
-    .update(rawBody)
-    .digest("hex");
-  return hash === signature;
+  const hash = crypto.createHmac("sha512", secretKey()).update(rawBody).digest("hex");
+  // Plain `===` on a secret comparison leaks timing information (it returns
+  // on the first mismatched character) — negligible odds of a practical
+  // exploit here, but it's a one-line fix and the textbook-correct way to
+  // compare an HMAC, so there's no reason not to. Length check first since
+  // timingSafeEqual throws on mismatched buffer lengths rather than just
+  // returning false.
+  const a = Buffer.from(hash, "hex");
+  const b = Buffer.from(signature, "hex");
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
 }

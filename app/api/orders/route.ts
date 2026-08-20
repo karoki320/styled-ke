@@ -3,6 +3,9 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { generateOrderNumber } from "@/lib/utils";
 import { notifyOwnerNewOrder } from "@/lib/whatsapp";
 import { sendOrderReceiptEmail } from "@/lib/email";
+import { DELIVERY_OPTIONS } from "@/lib/mock-data";
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export interface CreateOrderPayload {
   name: string;
@@ -39,7 +42,18 @@ export async function POST(req: NextRequest) {
   // We don't call customers to confirm — the emailed receipt is the
   // confirmation. Fire-and-forget: sendOrderReceiptEmail no-ops quietly if
   // no email was given or Resend isn't configured yet.
-  const sendReceipt = (finalOrderNumber: string) => {
+  //
+  // Takes items/subtotal/total as parameters rather than closing over
+  // `body` directly — the Supabase-configured path below recomputes all of
+  // these from the real products table, and the email needs to reflect
+  // what was actually charged/recorded, not whatever the client sent.
+  const sendReceipt = (
+    finalOrderNumber: string,
+    items: { name: string; qty: number; price: number }[],
+    subtotal: number,
+    deliveryFee: number,
+    total: number
+  ) => {
     if (!body.email) return;
     const addressParts = [
       body.deliveryDetails.delivery_address,
@@ -51,10 +65,10 @@ export async function POST(req: NextRequest) {
       to: body.email,
       customerName: body.name,
       orderNumber: finalOrderNumber,
-      items: body.items.map((i) => ({ name: i.name, qty: i.qty, price: i.price })),
-      subtotal: body.subtotal,
-      deliveryFee: body.deliveryFee,
-      total: body.total,
+      items,
+      subtotal,
+      deliveryFee,
+      total,
       deliveryMethod: body.deliveryMethod,
       deliveryAddress: addressParts.length ? addressParts.join(", ") : undefined,
     }).catch(() => {
@@ -65,6 +79,51 @@ export async function POST(req: NextRequest) {
   if (isSupabaseConfigured) {
     try {
       const supabase = createAdminClient();
+
+      // Never trust prices (or names, or the total) the client sent —
+      // editing a fetch body in devtools before it leaves the browser is
+      // trivial, and body.items[].price / body.subtotal / body.total were
+      // previously stored as-is with nothing checked against what these
+      // products actually cost. Recompute every line item's price from the
+      // products table itself; an item that doesn't resolve to a real,
+      // active product fails the whole order rather than silently trusting
+      // whatever price came in. This is the same principle as the Paystack
+      // amount check in lib/orders.ts, applied one step earlier: that check
+      // makes sure the CHARGE matches the order's total, this makes sure
+      // the order's total matches the PRODUCT's real price in the first
+      // place — checking only the charge would just mean a tampered order
+      // and a tampered payment agreeing with each other.
+      const productIds = Array.from(new Set(body.items.map((i) => i.productId).filter((id) => UUID_RE.test(id))));
+      const { data: products, error: productsErr } = await supabase
+        .from("products")
+        .select("id, name, price, is_active")
+        .in("id", productIds.length ? productIds : ["00000000-0000-0000-0000-000000000000"]);
+      if (productsErr) throw productsErr;
+      const productById = new Map((products || []).map((p) => [p.id, p]));
+
+      const verifiedItems = body.items.map((item) => {
+        const product = UUID_RE.test(item.productId) ? productById.get(item.productId) : undefined;
+        if (!product || !product.is_active) return null;
+        const qty = Math.max(1, Math.floor(Number(item.qty)) || 1);
+        return { productId: item.productId, name: product.name, price: product.price, qty };
+      });
+
+      if (verifiedItems.some((i) => i === null)) {
+        return NextResponse.json(
+          { error: "One or more items in your cart are no longer available. Please refresh and try again." },
+          { status: 400 }
+        );
+      }
+      const items = verifiedItems as { productId: string; name: string; price: number; qty: number }[];
+
+      // Delivery fee is similarly re-derived from the same fixed option
+      // list the checkout UI itself uses (lib/mock-data.ts), not read off
+      // the request — "rider"/"matatu" are quoted live and correctly carry
+      // a 0 fee here either way, but "mtaani"/"doorstep" have a real fixed
+      // fee that a tampered request could otherwise zero out.
+      const deliveryFee = DELIVERY_OPTIONS.find((d) => d.id === body.deliveryMethod)?.fee ?? 0;
+      const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0);
+      const total = subtotal + deliveryFee;
 
       let { data: customer } = await supabase
         .from("customers")
@@ -89,9 +148,9 @@ export async function POST(req: NextRequest) {
           customer_id: customer!.id,
           status: "pending",
           source: body.source || "website",
-          subtotal: body.subtotal,
-          delivery_fee: body.deliveryFee,
-          total: body.total,
+          subtotal,
+          delivery_fee: deliveryFee,
+          total,
           delivery_method: body.deliveryMethod,
           delivery_notes: body.notes,
           payment_method: body.paymentMethod,
@@ -102,16 +161,10 @@ export async function POST(req: NextRequest) {
         .single();
       if (orderErr) throw orderErr;
 
-      // item.productId comes from the storefront's cart, which now sources
-      // products from Supabase (real uuid ids). Guard with a uuid check
-      // anyway so any stale cart still holding an old mock id (e.g. "1")
-      // from before the catalog migration degrades gracefully to null
-      // instead of failing the whole insert.
-      const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       const { error: itemsErr } = await supabase.from("order_items").insert(
-        body.items.map((item) => ({
+        items.map((item) => ({
           order_id: order.id,
-          product_id: UUID_RE.test(item.productId) ? item.productId : null,
+          product_id: item.productId,
           product_name: item.name,
           unit_price: item.price,
           quantity: item.qty,
@@ -123,8 +176,8 @@ export async function POST(req: NextRequest) {
       notifyOwnerNewOrder({
         order_number: order.order_number,
         customer_name: body.name,
-        total: body.total,
-        items_summary: body.items.map((i) => i.name).join(", "),
+        total,
+        items_summary: items.map((i) => i.name).join(", "),
       }).catch(() => {
         // Non-fatal — WhatsApp isn't configured yet or the send failed.
       });
@@ -138,7 +191,13 @@ export async function POST(req: NextRequest) {
       // receipt" here, before the customer has even reached Paystack's
       // payment page, would confirm an order nobody has paid for yet.
       if (body.paymentMethod === "mpesa") {
-        sendReceipt(order.order_number);
+        sendReceipt(
+          order.order_number,
+          items.map((i) => ({ name: i.name, qty: i.qty, price: i.price })),
+          subtotal,
+          deliveryFee,
+          total
+        );
       }
 
       return NextResponse.json({ id: order.id, orderNumber: order.order_number });
@@ -147,8 +206,16 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Mock path — no Supabase configured yet. Still email a receipt if Resend
-  // is configured, so that piece can be tested/used independently.
-  sendReceipt(orderNumber);
+  // Mock path — no Supabase configured yet, so there's no products table to
+  // verify prices against; trusting the client here is a dev-only fallback
+  // with no real money involved. Still email a receipt if Resend is
+  // configured, so that piece can be tested/used independently.
+  sendReceipt(
+    orderNumber,
+    body.items.map((i) => ({ name: i.name, qty: i.qty, price: i.price })),
+    body.subtotal,
+    body.deliveryFee,
+    body.total
+  );
   return NextResponse.json({ id: `mock-${Date.now()}`, orderNumber, mock: true });
 }

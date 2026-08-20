@@ -42,6 +42,40 @@ export function createAdminClient() {
   );
 }
 
+/** Re-checks "is this a signed-in admin?" from inside an API route.
+ *
+ * middleware.ts already gates page navigation under /admin, but it does
+ * NOT run for routes under /api — those are reachable directly regardless
+ * of which page (if any) linked to them. Any /api route that reads or acts
+ * on data beyond what an anonymous storefront visitor should see (cross-
+ * customer data, sending real WhatsApp messages, etc.) needs this check
+ * itself rather than assuming the request came from an already-gated page.
+ * Returns null when there's no signed-in admin — callers should respond
+ * 401/403 and stop. */
+export async function requireAdmin(): Promise<{ id: string } | null> {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    // Can't verify anyone's identity without Supabase configured — fail
+    // closed rather than skip the check, unlike middleware.ts's page-level
+    // dev-convenience bypass. There's no legitimate "local dev without
+    // Supabase" reason to let real WhatsApp sends or cross-customer data
+    // reads through unauthenticated.
+    return null;
+  }
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return null;
+    const { data: profile } = await supabase.from("profiles").select("is_admin").eq("id", user.id).maybeSingle();
+    if (!profile?.is_admin) return null;
+    return { id: user.id };
+  } catch (err) {
+    console.error("requireAdmin: auth check failed:", err);
+    return null;
+  }
+}
+
 /** Public-read client — anon key, no session/cookies. Use for storefront
  * reads that are the same for every visitor (product catalogue, hero
  * slides, announcements — all gated by "is_active = true" RLS policies

@@ -1,8 +1,11 @@
 import type { createAdminClient } from "@/lib/supabase/server";
-import { notifyCustomerOrderConfirmed } from "@/lib/whatsapp";
+import { notifyCustomerOrderConfirmed, sendWhatsAppText } from "@/lib/whatsapp";
 import { sendOrderReceiptEmail } from "@/lib/email";
 
 type AdminClient = ReturnType<typeof createAdminClient>;
+
+// Float-rounding slack only — not a real gap an attacker can hide inside.
+const AMOUNT_TOLERANCE_KES = 1;
 
 /**
  * The single place that marks a Paystack order as paid and fires the
@@ -23,6 +26,19 @@ type AdminClient = ReturnType<typeof createAdminClient>;
  * is already "paid"), so it gets zero rows back and quietly no-ops. No
  * separate lock or flag table needed — the state transition IS the lock.
  *
+ * `paidAmountKES` MUST come from Paystack itself (the webhook's
+ * event.data.amount, or verifyPayment()'s result — both authoritative,
+ * server-to-server figures), never from anything the browser sent. It's
+ * compared against the order's own stored total before anything is
+ * confirmed: /api/paystack/initialize now re-derives the charge amount
+ * from the order record too, so a tampered client request shouldn't be
+ * able to create the mismatch in the first place — but this check stays
+ * as the actual authority regardless of what created the payment, since
+ * trusting a single validation point is exactly how these gaps survive a
+ * refactor two months from now. A mismatch leaves the order `pending`
+ * (never silently "confirmed") and pings the owner on WhatsApp instead of
+ * the customer, so a real person looks at it before anything ships.
+ *
  * Manual M-Pesa Paybill orders never call this — they have no automated
  * payment signal at all, so their receipt is sent at order placement
  * instead (see app/api/orders/route.ts). This function is Paystack-only.
@@ -30,8 +46,40 @@ type AdminClient = ReturnType<typeof createAdminClient>;
 export async function markOrderPaidAndNotify(
   supabase: AdminClient,
   orderNumber: string,
-  paystackReference: string
+  paystackReference: string,
+  paidAmountKES: number
 ): Promise<void> {
+  // Look up the order first — before touching anything — so the amount
+  // Paystack says was actually captured can be checked against what this
+  // order is supposed to cost.
+  const { data: existing, error: fetchErr } = await supabase
+    .from("orders")
+    .select("total, payment_status")
+    .eq("order_number", orderNumber)
+    .maybeSingle();
+
+  if (fetchErr) {
+    console.error("markOrderPaidAndNotify: order lookup failed:", fetchErr);
+    return;
+  }
+  if (!existing || existing.payment_status !== "pending") {
+    return; // unknown reference, or already confirmed by the other caller
+  }
+
+  if (Math.abs(paidAmountKES - existing.total) > AMOUNT_TOLERANCE_KES) {
+    console.error(
+      `Payment amount mismatch on order ${orderNumber}: Paystack confirmed KES ${paidAmountKES}, order total is KES ${existing.total}. Leaving payment_status=pending — not confirming an order that wasn't paid in full.`
+    );
+    const ownerNumber = process.env.OWNER_WHATSAPP_NUMBER;
+    if (ownerNumber) {
+      sendWhatsAppText(
+        ownerNumber,
+        `⚠️ Payment mismatch on order ${orderNumber}\nPaystack confirmed: KES ${paidAmountKES.toLocaleString()}\nOrder total: KES ${existing.total.toLocaleString()}\nDo NOT fulfil until you've checked this in Paystack's dashboard.`
+      ).catch(() => {});
+    }
+    return;
+  }
+
   const { data: order, error } = await supabase
     .from("orders")
     .update({
@@ -52,8 +100,8 @@ export async function markOrderPaidAndNotify(
     console.error("markOrderPaidAndNotify: order update failed:", error);
     return;
   }
-  // Already confirmed by the other caller (webhook vs. redirect), or the
-  // reference doesn't match a known order — either way, nothing to notify.
+  // Lost the race to the other caller (webhook vs. redirect) between the
+  // lookup above and this update — it's already confirmed, nothing to do.
   if (!order) return;
 
   const [{ data: items }, { data: customer }] = await Promise.all([

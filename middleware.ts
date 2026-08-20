@@ -3,9 +3,13 @@ import { NextResponse, type NextRequest } from "next/server";
 
 /** Protects /admin/*: requires a signed-in Supabase user with profiles.is_admin
  * = true, redirecting everyone else to the storefront home. When Supabase
- * isn't configured yet (no env vars), the check is skipped so the admin
- * scaffold stays reachable during local development — set the env vars
- * before deploying to production to enforce this for real. */
+ * isn't configured yet (no env vars), the check is skipped in development
+ * so the admin scaffold stays reachable while wiring things up — but NOT in
+ * production. A live site whose admin panel (POS financial data, the
+ * ability to edit prices, everything) goes completely unauthenticated the
+ * moment an env var is missing from a deploy is a much worse failure mode
+ * than the admin panel being briefly unreachable until it's fixed — this
+ * fails closed there instead. */
 export async function middleware(request: NextRequest) {
   if (!request.nextUrl.pathname.startsWith("/admin")) {
     return NextResponse.next();
@@ -14,6 +18,10 @@ export async function middleware(request: NextRequest) {
   const isSupabaseConfigured =
     !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!isSupabaseConfigured) {
+    const isProduction = process.env.VERCEL_ENV === "production" || process.env.NODE_ENV === "production";
+    if (isProduction) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
     return NextResponse.next();
   }
 
