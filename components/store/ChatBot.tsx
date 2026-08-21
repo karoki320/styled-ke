@@ -48,7 +48,7 @@ export function ChatBot() {
   return (
     <>
       {open && (
-        <div className="animate-chatUp fixed bottom-[86px] right-[22px] z-[400] flex h-[440px] w-[325px] flex-col border border-border bg-cream-card shadow-[0_20px_60px_rgba(0,0,0,0.12)]">
+        <div className="animate-chatUp fixed bottom-[146px] right-[22px] z-[400] flex h-[440px] w-[325px] flex-col border border-border bg-cream-card shadow-[0_20px_60px_rgba(0,0,0,0.12)] lg:bottom-[86px]">
           <div className="flex items-center gap-2.5 bg-black px-3.5 py-3">
             <Image
               src="/images/LOGO.jpg"
@@ -114,7 +114,7 @@ export function ChatBot() {
       )}
       <button
         onClick={() => setOpen(!open)}
-        className="fixed bottom-[22px] right-[22px] z-[400] flex h-[52px] w-[52px] items-center justify-center rounded-full bg-black shadow-[0_4px_18px_rgba(0,0,0,0.2)] transition-all hover:scale-105 hover:bg-gold"
+        className="fixed bottom-[82px] right-[22px] z-[400] flex h-[52px] w-[52px] items-center justify-center rounded-full bg-black shadow-[0_4px_18px_rgba(0,0,0,0.2)] transition-all hover:scale-105 hover:bg-gold lg:bottom-[22px]"
         aria-label="Open chat assistant"
       >
         {open ? <X size={22} className="text-white" /> : <Sparkles size={20} className="text-white" />}

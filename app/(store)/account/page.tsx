@@ -17,6 +17,10 @@ export default function AccountPage() {
   const [status, setStatus] = useState<{ type: "error" | "success"; msg: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [showPin, setShowPin] = useState(false);
+  const [pin, setPin] = useState("");
+  const [pinStatus, setPinStatus] = useState<{ type: "error" | "success"; msg: string } | null>(null);
+  const [pinLoading, setPinLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,6 +62,32 @@ export default function AccountPage() {
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithOtp({ email });
     if (!error) setMagicLinkSent(true);
+  };
+
+  const handlePinSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPinStatus(null);
+    setPinLoading(true);
+    try {
+      const res = await fetch("/api/admin/pin-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setPinStatus({ type: "error", msg: data.error || "Incorrect PIN." });
+        return;
+      }
+      setPinStatus({ type: "success", msg: "Welcome back — opening admin…" });
+      // Full page navigation (not router.push) so the freshly-set session
+      // cookie is present on the request middleware.ts reads for /admin.
+      window.location.href = "/admin";
+    } catch {
+      setPinStatus({ type: "error", msg: "Something went wrong. Try again." });
+    } finally {
+      setPinLoading(false);
+    }
   };
 
   return (
@@ -139,7 +169,44 @@ export default function AccountPage() {
         </div>
       )}
 
-      <div className="mt-10 border-t border-border pt-6">
+      <div className="mt-8 border-t border-border pt-5">
+        <button
+          onClick={() => setShowPin((v) => !v)}
+          className="w-full text-center text-[0.68rem] uppercase tracking-wide text-gray-400 hover:text-black"
+        >
+          Admin? Use quick-access PIN
+        </button>
+        {showPin && (
+          <form onSubmit={handlePinSubmit} className="mt-3 flex flex-col gap-2.5">
+            <input
+              type="password"
+              inputMode="text"
+              className="field text-center tracking-[0.2em]"
+              placeholder="Admin PIN"
+              value={pin}
+              onChange={(e) => setPin(e.target.value)}
+              autoFocus
+              required
+            />
+            <button disabled={pinLoading || !pin} className="btn-blk w-full justify-center py-3 text-[0.7rem]">
+              {pinLoading ? "CHECKING…" : "ENTER ADMIN"}
+            </button>
+            {pinStatus && (
+              <div
+                className={`border p-2.5 text-[0.74rem] ${
+                  pinStatus.type === "error"
+                    ? "border-danger/30 bg-danger/5 text-danger"
+                    : "border-success/30 bg-success/5 text-success"
+                }`}
+              >
+                {pinStatus.msg}
+              </div>
+            )}
+          </form>
+        )}
+      </div>
+
+      <div className="mt-8 border-t border-border pt-6">
         <div className="mb-3 text-[0.62rem] font-bold uppercase tracking-wide text-gray-400">
           Recent Orders (sample)
         </div>

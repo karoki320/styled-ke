@@ -37,7 +37,7 @@ interface OrderApiRow {
   payment_status: string;
   created_at: string;
   customers: { full_name: string; phone: string } | null;
-  order_items: { product_name: string; quantity: number }[] | null;
+  order_items: { product_name: string; variant_name: string | null; quantity: number }[] | null;
 }
 
 interface OrdersApiResponse {
@@ -56,7 +56,9 @@ function deliveryLocation(row: OrderApiRow): string {
 function itemsSummary(row: OrderApiRow): string {
   const items = row.order_items || [];
   if (!items.length) return "—";
-  return items.map((i) => `${i.product_name} x${i.quantity}`).join(", ");
+  return items
+    .map((i) => `${i.product_name}${i.variant_name ? ` (${i.variant_name})` : ""} x${i.quantity}`)
+    .join(", ");
 }
 
 function toOrder(row: OrderApiRow): Order {

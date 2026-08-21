@@ -40,7 +40,15 @@ async function decodeToDrawable(
 ): Promise<{ source: CanvasImageSource; width: number; height: number; cleanup?: () => void }> {
   if (typeof createImageBitmap === "function") {
     try {
-      const bitmap = await createImageBitmap(file);
+      // imageOrientation must be explicit. Its browser-default behavior is
+      // inconsistent — some engines auto-rotate to match the photo's EXIF
+      // orientation tag, others don't — so without this, a phone photo
+      // taken in portrait can come out sideways or upside-down depending on
+      // which browser processed the upload, while the <img> fallback below
+      // (which always respects EXIF) would have rendered it correctly. This
+      // is almost certainly why some uploaded product photos "don't look
+      // right" — forcing "from-image" makes every browser behave the same.
+      const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
       return { source: bitmap, width: bitmap.width, height: bitmap.height, cleanup: () => bitmap.close() };
     } catch {
       // Fall through to the <img> path below.

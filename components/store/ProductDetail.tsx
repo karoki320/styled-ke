@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Truck, CircleCheck, Package, MessageCircle, type LucideIcon } from "lucide-react";
 import type { Product } from "@/types";
-import { fmtKES } from "@/lib/utils";
+import { fmtKES, colorToCss } from "@/lib/utils";
 import { useCartStore } from "@/store/cart";
 import { ProductCard } from "./ProductCard";
 
@@ -32,8 +32,12 @@ export function ProductDetail({ product, related }: { product: Product; related:
     ? Math.round((1 - product.price / product.compare_price) * 100)
     : null;
 
+  const outOfStock = product.stock_quantity <= 0;
+  const lowStock = !outOfStock && product.stock_quantity <= product.low_stock_threshold;
+
   const handleAdd = () => {
-    addItem(product, qty);
+    if (outOfStock) return;
+    addItem(product, qty, activeColor || undefined);
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   };
@@ -119,7 +123,7 @@ export function ProductDetail({ product, related }: { product: Product; related:
               <div className="mb-2 text-[0.62rem] font-bold uppercase tracking-wide text-[#888]">
                 Colour: <span className="text-black">{activeColor}</span>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 {product.colors.map((c) => {
                   const active = c === activeColor;
                   return (
@@ -128,12 +132,18 @@ export function ProductDetail({ product, related }: { product: Product; related:
                       type="button"
                       onClick={() => setActiveColor(c)}
                       aria-pressed={active}
-                      className={`cursor-pointer border px-3.5 py-1.5 text-[0.7rem] font-semibold transition-colors ${
+                      title={c}
+                      className={`flex cursor-pointer items-center gap-1.5 border px-2.5 py-1.5 text-[0.7rem] font-semibold transition-colors ${
                         active
                           ? "border-black bg-black text-white"
                           : "border-border bg-transparent text-black hover:border-black"
                       }`}
                     >
+                      <span
+                        aria-hidden
+                        className="h-3.5 w-3.5 flex-shrink-0 rounded-full border border-black/15"
+                        style={{ background: colorToCss(c) }}
+                      />
                       {c}
                     </button>
                   );
@@ -147,30 +157,41 @@ export function ProductDetail({ product, related }: { product: Product; related:
               Qty:
             </span>
             <button
-              className="qty-btn h-[30px] w-[30px] border border-border bg-[#f5f5f5] hover:border-black hover:bg-black hover:text-white"
+              className="qty-btn h-[30px] w-[30px] border border-border bg-[#f5f5f5] hover:border-black hover:bg-black hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
               onClick={() => setQty(Math.max(1, qty - 1))}
+              disabled={outOfStock}
             >
               −
             </button>
             <span className="w-[34px] text-center font-bold">{qty}</span>
             <button
-              className="qty-btn h-[30px] w-[30px] border border-border bg-[#f5f5f5] hover:border-black hover:bg-black hover:text-white"
-              onClick={() => setQty(qty + 1)}
+              className="qty-btn h-[30px] w-[30px] border border-border bg-[#f5f5f5] hover:border-black hover:bg-black hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+              onClick={() => setQty(Math.min(product.stock_quantity, qty + 1))}
+              disabled={outOfStock}
             >
               +
             </button>
-            <span className="ml-2 text-[0.68rem] font-semibold text-success">
-              ✓ {product.stock_quantity} in stock
-            </span>
+            {outOfStock ? (
+              <span className="ml-2 text-[0.68rem] font-semibold text-danger">✕ Out of stock</span>
+            ) : lowStock ? (
+              <span className="ml-2 text-[0.68rem] font-semibold text-gold">
+                ⚠ Only {product.stock_quantity} left
+              </span>
+            ) : (
+              <span className="ml-2 text-[0.68rem] font-semibold text-success">
+                ✓ {product.stock_quantity} in stock
+              </span>
+            )}
           </div>
 
           <div className="flex flex-col gap-2.5">
             <button
               onClick={handleAdd}
-              className="btn-blk justify-center px-4 py-4 text-[0.73rem]"
+              disabled={outOfStock}
+              className="btn-blk justify-center px-4 py-4 text-[0.73rem] disabled:cursor-not-allowed disabled:opacity-50"
               style={added ? { background: "#27ae60" } : undefined}
             >
-              {added ? "✓ ADDED TO CART" : "ADD TO CART"}
+              {outOfStock ? "OUT OF STOCK" : added ? "✓ ADDED TO CART" : "ADD TO CART"}
             </button>
           </div>
 

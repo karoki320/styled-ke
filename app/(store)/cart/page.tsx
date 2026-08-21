@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ShoppingBag } from "lucide-react";
 import { useCartStore } from "@/store/cart";
-import { fmtKES } from "@/lib/utils";
+import { fmtKES, colorToCss } from "@/lib/utils";
 
 export default function CartPage() {
   const { items, updateQty, removeItem } = useCartStore();
@@ -32,7 +32,7 @@ export default function CartPage() {
         <div className="border border-border">
           {items.map((item) => (
             <div
-              key={item.productId}
+              key={`${item.productId}-${item.variant || ""}`}
               className="flex gap-4 border-b border-[#f5f5f5] p-4 last:border-b-0"
             >
               <Image
@@ -47,23 +47,33 @@ export default function CartPage() {
                   {item.category}
                 </div>
                 <div className="mb-2 font-semibold">{item.name}</div>
+                {item.variant && (
+                  <div className="mb-2 flex items-center gap-1.5 text-[0.75rem] text-gray-400">
+                    <span
+                      aria-hidden
+                      className="h-3 w-3 flex-shrink-0 rounded-full border border-black/15"
+                      style={{ background: colorToCss(item.variant) }}
+                    />
+                    {item.variant}
+                  </div>
+                )}
                 <div className="mb-3 font-bold text-gold">{fmtKES(item.price)}</div>
                 <div className="flex items-center gap-2">
                   <button
                     className="qty-btn h-7 w-7 border border-border bg-[#f5f5f5] hover:border-black hover:bg-black hover:text-white"
-                    onClick={() => updateQty(item.productId, item.qty - 1)}
+                    onClick={() => updateQty(item.productId, item.qty - 1, item.variant)}
                   >
                     −
                   </button>
                   <span className="w-6 text-center font-bold">{item.qty}</span>
                   <button
                     className="qty-btn h-7 w-7 border border-border bg-[#f5f5f5] hover:border-black hover:bg-black hover:text-white"
-                    onClick={() => updateQty(item.productId, item.qty + 1)}
+                    onClick={() => updateQty(item.productId, item.qty + 1, item.variant)}
                   >
                     +
                   </button>
                   <button
-                    onClick={() => removeItem(item.productId)}
+                    onClick={() => removeItem(item.productId, item.variant)}
                     className="ml-auto text-[0.7rem] uppercase tracking-wide text-gray-300 hover:text-danger"
                   >
                     Remove

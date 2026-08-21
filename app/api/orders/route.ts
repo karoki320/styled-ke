@@ -12,7 +12,7 @@ export interface CreateOrderPayload {
   phone: string;
   email?: string;
   notes?: string;
-  items: { productId: string; name: string; price: number; qty: number }[];
+  items: { productId: string; name: string; price: number; qty: number; color?: string }[];
   subtotal: number;
   deliveryFee: number;
   total: number;
@@ -105,7 +105,10 @@ export async function POST(req: NextRequest) {
         const product = UUID_RE.test(item.productId) ? productById.get(item.productId) : undefined;
         if (!product || !product.is_active) return null;
         const qty = Math.max(1, Math.floor(Number(item.qty)) || 1);
-        return { productId: item.productId, name: product.name, price: product.price, qty };
+        // Colour is just a label the customer picked (not priced separately
+        // here), so it's fine to trust as-is — worst case an order shows an
+        // odd colour name, it can't be used to under-charge anything.
+        return { productId: item.productId, name: product.name, price: product.price, qty, color: item.color || undefined };
       });
 
       if (verifiedItems.some((i) => i === null)) {
@@ -114,7 +117,7 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         );
       }
-      const items = verifiedItems as { productId: string; name: string; price: number; qty: number }[];
+      const items = verifiedItems as { productId: string; name: string; price: number; qty: number; color?: string }[];
 
       // Delivery fee is similarly re-derived from the same fixed option
       // list the checkout UI itself uses (lib/mock-data.ts), not read off
@@ -166,6 +169,7 @@ export async function POST(req: NextRequest) {
           order_id: order.id,
           product_id: item.productId,
           product_name: item.name,
+          variant_name: item.color || null,
           unit_price: item.price,
           quantity: item.qty,
           subtotal: item.price * item.qty,
@@ -173,11 +177,13 @@ export async function POST(req: NextRequest) {
       );
       if (itemsErr) throw itemsErr;
 
+      const displayName = (i: { name: string; color?: string }) => (i.color ? `${i.name} (${i.color})` : i.name);
+
       notifyOwnerNewOrder({
         order_number: order.order_number,
         customer_name: body.name,
         total,
-        items_summary: items.map((i) => i.name).join(", "),
+        items_summary: items.map(displayName).join(", "),
       }).catch(() => {
         // Non-fatal — WhatsApp isn't configured yet or the send failed.
       });
@@ -193,7 +199,7 @@ export async function POST(req: NextRequest) {
       if (body.paymentMethod === "mpesa") {
         sendReceipt(
           order.order_number,
-          items.map((i) => ({ name: i.name, qty: i.qty, price: i.price })),
+          items.map((i) => ({ name: displayName(i), qty: i.qty, price: i.price })),
           subtotal,
           deliveryFee,
           total
@@ -212,7 +218,7 @@ export async function POST(req: NextRequest) {
   // configured, so that piece can be tested/used independently.
   sendReceipt(
     orderNumber,
-    body.items.map((i) => ({ name: i.name, qty: i.qty, price: i.price })),
+    body.items.map((i) => ({ name: i.color ? `${i.name} (${i.color})` : i.name, qty: i.qty, price: i.price })),
     body.subtotal,
     body.deliveryFee,
     body.total

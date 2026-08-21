@@ -6,7 +6,7 @@ import NextImage from "next/image";
 import Link from "next/link";
 import { ShoppingBag, CreditCard, Smartphone, Mail, DoorOpen } from "lucide-react";
 import { useCartStore } from "@/store/cart";
-import { fmtKES, waLink } from "@/lib/utils";
+import { fmtKES, waLink, colorToCss } from "@/lib/utils";
 import { DELIVERY_OPTIONS } from "@/lib/mock-data";
 import { WhatsAppIcon } from "@/components/ui/WhatsAppIcon";
 import type { DeliveryMethodId } from "@/types";
@@ -106,6 +106,7 @@ export function Checkout() {
             name: i.name,
             price: i.price,
             qty: i.qty,
+            color: i.variant,
           })),
           subtotal: sub,
           deliveryFee: delOpt.fee,
@@ -349,7 +350,7 @@ export function Checkout() {
           <div className="mb-3 border border-border p-5">
             <div className="pf mb-3.5 text-[0.92rem] font-bold">Order Summary</div>
             {items.map((i) => (
-              <div key={i.productId} className="mb-2.5 flex items-center gap-2.5">
+              <div key={`${i.productId}-${i.variant || ""}`} className="mb-2.5 flex items-center gap-2.5">
                 <NextImage
                   src={i.image}
                   alt={i.name}
@@ -359,7 +360,16 @@ export function Checkout() {
                 />
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-[0.76rem] font-semibold leading-tight">{i.name}</div>
-                  <div className="text-[0.68rem] text-gray-400">× {i.qty}</div>
+                  <div className="flex items-center gap-1 text-[0.68rem] text-gray-400">
+                    {i.variant && (
+                      <span
+                        aria-hidden
+                        className="h-2.5 w-2.5 flex-shrink-0 rounded-full border border-black/15"
+                        style={{ background: colorToCss(i.variant) }}
+                      />
+                    )}
+                    {i.variant ? `${i.variant} · ` : ""}× {i.qty}
+                  </div>
                 </div>
                 <div className="flex-shrink-0 text-[0.8rem] font-bold">{fmtKES(i.price * i.qty)}</div>
               </div>

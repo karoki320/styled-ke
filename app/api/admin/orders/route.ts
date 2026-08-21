@@ -39,7 +39,7 @@ export async function GET() {
        delivery_method, delivery_address, delivery_city, delivery_zone, delivery_agent,
        payment_method, payment_status, created_at,
        customers ( full_name, phone ),
-       order_items ( product_name, quantity )`
+       order_items ( product_name, variant_name, quantity )`
     )
     .order("created_at", { ascending: false });
 
