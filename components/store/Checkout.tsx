@@ -27,14 +27,14 @@ interface FormState {
   pickupAddress: string;
 }
 
-const STEPS = ["Details", "Delivery", "Payment", "Review"];
 const CITIES = ["Nairobi", "Mombasa", "Kisumu", "Nakuru", "Eldoret", "Thika", "Nyeri", "Machakos"];
 
 export function Checkout() {
   const router = useRouter();
   const { items, clear } = useCartStore();
-  const [step, setStep] = useState(1);
   const [placing, setPlacing] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [showNotes, setShowNotes] = useState(false);
   const [form, setForm] = useState<FormState>({
     name: "",
     phone: "",
@@ -71,16 +71,26 @@ export function Checkout() {
     );
   }
 
-  const validateStep2 = () => {
+  // One combined check instead of gating progress step-by-step — the whole
+  // form is on one page now, so validation happens once, at the moment
+  // someone actually taps "Place Order".
+  const validate = () => {
+    if (!form.name.trim() || !form.phone.trim()) return "Please add your name and phone number.";
     const m = form.deliveryMethod;
-    if (m === "rider" && !form.address) return "Enter delivery address.";
-    if (m === "matatu" && (!form.destination || !form.sacco)) return "Enter destination and sacco.";
-    if (m === "mtaani" && (!form.zone || !form.agent)) return "Enter zone and agent.";
-    if (m === "doorstep" && !form.pickupAddress) return "Enter pickup address.";
+    if (m === "rider" && !form.address) return "Enter your delivery address.";
+    if (m === "matatu" && (!form.destination || !form.sacco)) return "Enter your destination and sacco.";
+    if (m === "mtaani" && (!form.zone || !form.agent)) return "Enter your zone and pickup agent.";
+    if (m === "doorstep" && !form.pickupAddress) return "Enter your pickup address.";
     return null;
   };
 
   const handlePlace = async () => {
+    const err = validate();
+    if (err) {
+      setFormError(err);
+      return;
+    }
+    setFormError(null);
     setPlacing(true);
     try {
       const res = await fetch("/api/orders", {
@@ -156,87 +166,53 @@ export function Checkout() {
       >
         ← Continue Shopping
       </Link>
-      <div className="mb-9 text-center">
-        <h1 className="pf mb-5.5 text-[1.9rem] font-bold">Checkout</h1>
-        <div className="flex items-center justify-center">
-          {STEPS.map((s, i) => (
-            <div key={s} className="flex items-center">
-              <div className="flex flex-col items-center gap-1.5">
-                <div
-                  className="flex h-[26px] w-[26px] items-center justify-center rounded-full text-[0.7rem] font-bold transition-all"
-                  style={{
-                    background: step >= i + 1 ? "#1a1a1a" : "#f0f0f0",
-                    color: step >= i + 1 ? "#fff" : "#bbb",
-                  }}
-                >
-                  {step > i + 1 ? "✓" : i + 1}
-                </div>
-                <span
-                  className="text-[0.57rem] uppercase tracking-wide"
-                  style={{
-                    color: step === i + 1 ? "#1a1a1a" : "#bbb",
-                    fontWeight: step === i + 1 ? 700 : 400,
-                  }}
-                >
-                  {s}
-                </span>
-              </div>
-              {i < STEPS.length - 1 && (
-                <div
-                  className="mx-2.5 mb-5.5 h-px w-[50px]"
-                  style={{ background: step > i + 1 ? "#1a1a1a" : "#e8e8e8" }}
-                />
-              )}
-            </div>
-          ))}
-        </div>
+      <div className="mb-7 text-center">
+        <h1 className="pf mb-1.5 text-[1.9rem] font-bold">Checkout</h1>
+        <p className="text-[0.78rem] text-gray-400">
+          Fill this in once, then tap Place Order — that&rsquo;s it.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 items-start gap-7 lg:grid-cols-[1.4fr_1fr]">
-        <div className="border border-border p-6">
-          {step === 1 && (
-            <div>
-              <div className="pf mb-4.5 text-[1.05rem] font-bold">Your Details</div>
-              <div className="flex flex-col gap-3">
-                <Field label="Full Name" value={form.name} onChange={(v) => upd("name", v)} placeholder="e.g. Amina Wanjiru" />
-                <Field label="Phone" value={form.phone} onChange={(v) => upd("phone", v)} placeholder="e.g. 0712 345 678" type="tel" />
-                <Field label="Email (for your receipt)" value={form.email} onChange={(v) => upd("email", v)} placeholder="amina@gmail.com" type="email" />
-                <div>
-                  <label className="mb-1.5 block text-[0.6rem] font-bold uppercase tracking-wide text-[#888]">
-                    Order Notes (optional)
-                  </label>
-                  <textarea
-                    className="field resize-y"
-                    rows={2}
-                    value={form.notes}
-                    onChange={(e) => upd("notes", e.target.value)}
-                    placeholder="Special instructions…"
-                  />
-                </div>
-              </div>
-              <button
-                className="btn-blk mt-4.5 w-full justify-center py-3.5 text-[0.72rem]"
-                onClick={() => {
-                  if (form.name && form.phone) setStep(2);
-                  else alert("Please fill in name and phone.");
-                }}
-              >
-                CHOOSE DELIVERY →
-              </button>
+        <div className="flex flex-col gap-6 border border-border p-6">
+          {/* One page, top to bottom — no "next step" clicks. Everything
+              needed to place the order lives here; the button at the very
+              bottom is the only one that matters. */}
+          <div>
+            <div className="pf mb-3.5 text-[1.05rem] font-bold">Your Details</div>
+            <div className="flex flex-col gap-3">
+              <Field label="Full Name" value={form.name} onChange={(v) => upd("name", v)} placeholder="e.g. Amina Wanjiru" />
+              <Field label="Phone" value={form.phone} onChange={(v) => upd("phone", v)} placeholder="e.g. 0712 345 678" type="tel" />
+              <Field label="Email (optional, for your receipt)" value={form.email} onChange={(v) => upd("email", v)} placeholder="amina@gmail.com" type="email" />
+              {!showNotes ? (
+                <button
+                  type="button"
+                  onClick={() => setShowNotes(true)}
+                  className="self-start text-[0.68rem] font-bold uppercase tracking-wide text-gray-400 underline underline-offset-2"
+                >
+                  + Add a note (optional)
+                </button>
+              ) : (
+                <textarea
+                  className="field resize-y"
+                  rows={2}
+                  autoFocus
+                  value={form.notes}
+                  onChange={(e) => upd("notes", e.target.value)}
+                  placeholder="Anything else we should know?"
+                />
+              )}
             </div>
-          )}
+          </div>
 
-          {step === 2 && (
-            <div>
-              <div className="pf mb-1 text-[1.05rem] font-bold">Delivery Method</div>
-              <div className="mb-4 text-[0.74rem] text-gray-400">
-                How would you like to receive your order?
-              </div>
+          <div className="border-t border-border pt-6">
+            <div className="pf mb-3.5 text-[1.05rem] font-bold">Delivery</div>
+            <div className="flex flex-col gap-2.5">
               {DELIVERY_OPTIONS.map((opt) => (
                 <div
                   key={opt.id}
                   onClick={() => upd("deliveryMethod", opt.id)}
-                  className="mb-2.5 cursor-pointer border-[1.5px] p-4 transition-all hover:border-[#888]"
+                  className="cursor-pointer border-[1.5px] p-4 transition-all hover:border-[#888]"
                   style={{
                     borderColor: form.deliveryMethod === opt.id ? "#1a1a1a" : "#e8e8e8",
                     background: form.deliveryMethod === opt.id ? "#fafafa" : "#fff",
@@ -277,10 +253,7 @@ export function Checkout() {
                           </select>
                           <div className="flex items-start gap-1.5 bg-cream-card p-2.5 text-[0.71rem] text-[#555]">
                             <Mail size={14} className="mt-0.5 flex-shrink-0" />
-                            <span>
-                              We don&apos;t call before delivery — your receipt is emailed the
-                              moment you order, and the rider heads straight out.
-                            </span>
+                            <span>We won&apos;t call — your receipt is emailed right away.</span>
                           </div>
                         </>
                       )}
@@ -309,28 +282,12 @@ export function Checkout() {
                   )}
                 </div>
               ))}
-              <div className="flex gap-2.5">
-                <button className="btn-out flex-1 justify-center py-3 text-[0.7rem]" onClick={() => setStep(1)}>
-                  ← BACK
-                </button>
-                <button
-                  className="btn-blk flex-[2] justify-center py-3.5 text-[0.71rem]"
-                  onClick={() => {
-                    const err = validateStep2();
-                    if (err) alert(err);
-                    else setStep(3);
-                  }}
-                >
-                  CONTINUE TO PAYMENT →
-                </button>
-              </div>
             </div>
-          )}
+          </div>
 
-          {step === 3 && (
-            <div>
-              <div className="pf mb-4 text-[1.05rem] font-bold">Payment Method</div>
-              {[
+          <div className="border-t border-border pt-6">
+            <div className="pf mb-3.5 text-[1.05rem] font-bold">Payment</div>
+            {[
                 { id: "paystack" as const, icon: CreditCard, label: "Card / M-Pesa (Paystack)", desc: "Secure online payment — instant confirmation." },
                 { id: "mpesa" as const, icon: Smartphone, label: "M-Pesa Paybill", desc: "Pay manually via M-Pesa Paybill." },
               ].map((pm) => (
@@ -371,63 +328,21 @@ export function Checkout() {
                   4. Amount: <strong>{fmtKES(total)}</strong>
                 </div>
               )}
-              <div className="mt-2 flex gap-2.5">
-                <button className="btn-out flex-1 justify-center py-3 text-[0.7rem]" onClick={() => setStep(2)}>
-                  ← BACK
-                </button>
-                <button className="btn-blk flex-[2] justify-center py-3.5 text-[0.71rem]" onClick={() => setStep(4)}>
-                  REVIEW ORDER →
-                </button>
-              </div>
-            </div>
+          </div>
+
+          {formError && (
+            <p className="border border-[#f5c6cb] bg-[#fdecea] p-2.5 text-[0.78rem] text-[#a94442]">
+              {formError}
+            </p>
           )}
 
-          {step === 4 && (
-            <div>
-              <div className="pf mb-4 text-[1.05rem] font-bold">Review Your Order</div>
-              {[
-                ["Name", form.name],
-                ["Phone", form.phone],
-                ["Delivery", delOpt.label],
-                ["Fee", delOpt.fee > 0 ? fmtKES(delOpt.fee) : "Quoted on delivery"],
-                [
-                  "Payment",
-                  form.payment === "paystack" ? "Card / M-Pesa (Paystack)" : "M-Pesa Paybill",
-                ],
-              ].map(([l, v]) => (
-                <div key={l} className="flex justify-between border-b border-[#f5f5f5] py-2 text-[0.82rem]">
-                  <span className="text-gray-400">{l}</span>
-                  <span className="font-semibold">{v}</span>
-                </div>
-              ))}
-              <div className="mb-4 mt-3">
-                {items.map((i) => (
-                  <div key={i.productId} className="flex justify-between py-1.5 text-[0.8rem]">
-                    <span className="text-gray-400">
-                      {i.name} × {i.qty}
-                    </span>
-                    <span>{fmtKES(i.price * i.qty)}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="mb-4 flex items-center justify-between border border-border bg-cream-card p-3.5">
-                <span className="pf font-bold">Total</span>
-                <span className="pf text-[1.1rem] font-black text-gold">{fmtKES(total)}</span>
-              </div>
-              <div className="flex gap-2.5">
-                <button className="btn-out flex-1 justify-center py-3 text-[0.7rem]" onClick={() => setStep(3)}>
-                  ← BACK
-                </button>
-                <button
-                  className="btn-blk flex-[2] justify-center py-3.5 text-[0.71rem] disabled:opacity-60"
-                  onClick={handlePlace}
-                  disabled={placing}
-                >
-                  {placing ? "PLACING ORDER…" : "✓ PLACE ORDER"}
-                </button>
-              </div>
-            </div>
-          )}
+          <button
+            className="btn-blk w-full justify-center py-4 text-[0.78rem] disabled:opacity-60"
+            onClick={handlePlace}
+            disabled={placing}
+          >
+            {placing ? "PLACING ORDER…" : `✓ PLACE ORDER — ${fmtKES(total)}`}
+          </button>
         </div>
 
         <div>

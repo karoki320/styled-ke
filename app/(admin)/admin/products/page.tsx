@@ -55,6 +55,12 @@ export default function AdminProductsPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [clothingCategoryId, setClothingCategoryId] = useState<string | null>(null);
+  // Advanced fields (compare price, stock, badge, SKU, colours, featured) are
+  // collapsed by default — most of the time a shop owner just needs a name,
+  // price, description and photo. Kept editable, just not shoved in their
+  // face for every single product.
+  const [showMore, setShowMore] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
   const previewUrlRef = useRef<string | null>(null);
 
   async function load() {
@@ -130,6 +136,7 @@ export default function AdminProductsPage() {
     setEditing(null);
     setDraft(emptyDraft);
     setError(null);
+    setShowMore(false);
     setShowForm(true);
   };
 
@@ -138,6 +145,7 @@ export default function AdminProductsPage() {
     setEditing(p.id);
     setDraft({ ...p });
     setError(null);
+    setShowMore(false);
     setShowForm(true);
   };
 
@@ -437,83 +445,119 @@ export default function AdminProductsPage() {
                   required
                 />
               </FormField>
-              <FormField label="URL Slug (auto-generated, editable)">
-                <input
-                  className="field"
-                  value={draft.slug}
-                  onChange={(e) => setDraft((d) => ({ ...d, slug: slugify(e.target.value) }))}
-                />
-              </FormField>
+
+              {/* No visible "slug" field — it's generated silently from the
+                  name (see handleSave). The owner just gets a link they can
+                  copy and send straight to a customer, which is the part
+                  that actually matters to them. */}
+              {draft.name.trim() && (
+                <div className="-mt-1.5 flex items-center gap-2 text-[0.7rem] text-gray-400">
+                  <span className="truncate">
+                    Buy link: styledke.com/product/{draft.slug || slugify(draft.name)}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const origin = typeof window !== "undefined" ? window.location.origin : "https://styledke.com";
+                      navigator.clipboard
+                        .writeText(`${origin}/product/${draft.slug || slugify(draft.name)}`)
+                        .then(() => {
+                          setLinkCopied(true);
+                          setTimeout(() => setLinkCopied(false), 1500);
+                        })
+                        .catch(() => {});
+                    }}
+                    className="flex-shrink-0 font-bold uppercase tracking-wide text-black underline underline-offset-2"
+                  >
+                    {linkCopied ? "Copied!" : "Copy"}
+                  </button>
+                </div>
+              )}
+
               <FormField label="Description">
                 <textarea
                   className="field"
                   rows={3}
                   value={draft.description}
                   onChange={(e) => setDraft((d) => ({ ...d, description: e.target.value }))}
+                  placeholder="A line or two about the item — this is what customers read on the product page."
                 />
               </FormField>
 
-              <div className="grid grid-cols-2 gap-3">
-                <FormField label="Price (KES)">
-                  <input
-                    type="number"
-                    className="field"
-                    value={draft.price}
-                    onChange={(e) => setDraft((d) => ({ ...d, price: Number(e.target.value) }))}
-                    min={0}
-                    required
-                  />
-                </FormField>
-                <FormField label="Compare Price (optional)">
-                  <input
-                    type="number"
-                    className="field"
-                    value={draft.compare_price ?? ""}
-                    onChange={(e) =>
-                      setDraft((d) => ({ ...d, compare_price: e.target.value ? Number(e.target.value) : null }))
-                    }
-                    min={0}
-                  />
-                </FormField>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <FormField label="Stock Quantity">
-                  <input
-                    type="number"
-                    className="field"
-                    value={draft.stock_quantity}
-                    onChange={(e) => setDraft((d) => ({ ...d, stock_quantity: Number(e.target.value) }))}
-                    min={0}
-                  />
-                </FormField>
-                <FormField label="Badge">
-                  <select
-                    className="field"
-                    value={draft.badge ?? ""}
-                    onChange={(e) => setDraft((d) => ({ ...d, badge: (e.target.value || null) as Draft["badge"] }))}
-                  >
-                    <option value="">None</option>
-                    <option value="NEW">NEW</option>
-                    <option value="SALE">SALE</option>
-                  </select>
-                </FormField>
-              </div>
-              <FormField label="SKU">
+              <FormField label="Price (KES)">
                 <input
+                  type="number"
                   className="field"
-                  value={draft.sku}
-                  onChange={(e) => setDraft((d) => ({ ...d, sku: e.target.value }))}
-                  placeholder="e.g. SK-CL-012"
+                  value={draft.price}
+                  onChange={(e) => setDraft((d) => ({ ...d, price: Number(e.target.value) }))}
+                  min={0}
+                  required
                 />
               </FormField>
-              <FormField label="Colours (comma-separated, optional)">
-                <input
-                  className="field"
-                  value={draft.colors}
-                  onChange={(e) => setDraft((d) => ({ ...d, colors: e.target.value }))}
-                  placeholder="e.g. Black, Purple"
-                />
-              </FormField>
+
+              <button
+                type="button"
+                onClick={() => setShowMore((v) => !v)}
+                className="-mt-1 self-start text-[0.68rem] font-bold uppercase tracking-wide text-gray-400 underline underline-offset-2"
+              >
+                {showMore ? "Hide extra options" : "More options (stock, sale badge, colours…)"}
+              </button>
+
+              {showMore && (
+                <div className="flex flex-col gap-3 border-t border-border pt-3.5">
+                  <div className="grid grid-cols-2 gap-3">
+                    <FormField label="Compare Price (optional)">
+                      <input
+                        type="number"
+                        className="field"
+                        value={draft.compare_price ?? ""}
+                        onChange={(e) =>
+                          setDraft((d) => ({ ...d, compare_price: e.target.value ? Number(e.target.value) : null }))
+                        }
+                        min={0}
+                      />
+                    </FormField>
+                    <FormField label="Badge">
+                      <select
+                        className="field"
+                        value={draft.badge ?? ""}
+                        onChange={(e) => setDraft((d) => ({ ...d, badge: (e.target.value || null) as Draft["badge"] }))}
+                      >
+                        <option value="">None</option>
+                        <option value="NEW">NEW</option>
+                        <option value="SALE">SALE</option>
+                      </select>
+                    </FormField>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <FormField label="Stock Quantity">
+                      <input
+                        type="number"
+                        className="field"
+                        value={draft.stock_quantity}
+                        onChange={(e) => setDraft((d) => ({ ...d, stock_quantity: Number(e.target.value) }))}
+                        min={0}
+                      />
+                    </FormField>
+                    <FormField label="SKU">
+                      <input
+                        className="field"
+                        value={draft.sku}
+                        onChange={(e) => setDraft((d) => ({ ...d, sku: e.target.value }))}
+                        placeholder="e.g. SK-CL-012"
+                      />
+                    </FormField>
+                  </div>
+                  <FormField label="Colours (comma-separated, optional)">
+                    <input
+                      className="field"
+                      value={draft.colors}
+                      onChange={(e) => setDraft((d) => ({ ...d, colors: e.target.value }))}
+                      placeholder="e.g. Black, Purple"
+                    />
+                  </FormField>
+                </div>
+              )}
 
               <div>
                 <label className="mb-1.5 block text-[0.6rem] font-bold uppercase tracking-wide text-[#888]">
